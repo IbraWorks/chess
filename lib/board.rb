@@ -33,6 +33,13 @@ attr_reader :game_board
     target_location = [end_x, end_y]
     @game_board[end_x][end_y] = piece.class.new(target_location, piece.colour)
     @game_board[start_x][start_y] = nil
+
+    moved_piece = @game_board[end_x][end_y]
+    if moved_piece.class == Pawn
+      pawn_specials(moved_piece, start_x, end_y)
+    end
+
+    turn_off_enpassant(piece.colour) #once a move has been made, disallow enpassant on enemy pawns.
   end
 
   #check if piece exists on starting sq.
@@ -44,86 +51,104 @@ attr_reader :game_board
     piece = @game_board[start_x][start_y]
     return false if piece == nil
 
-    target_location = [end_x, end_y]
-    return false if !piece.moves.include?(target_location)
+    target_sq = [end_x, end_y]
+    return false if !piece.moves.include?(target_sq)
 
-    return pawn_validity?() if piece.class == Pawn
-    return false unless empty_square?(target_location) || enemy_at_square(piece.colour, target_location)
+    return valid_pawn_move?(piece, target_sq, end_y, start_y) if piece.class == Pawn
+    return false unless empty_sq?(target_sq) || enemy_at_sq?(piece.colour, target_sq)
 
+    #need to check for spaces in between
   end
 
-  def pawn_validity?()
-
+  #go through each row and select square that != nil
+  def all_pieces_on_board
+    pieces = @game_board.map { |row|
+      row.select { |square| square != nil  }
+     }
+    pieces = pieces.flatten #place all pieces in a one dimensional array
   end
-  def empty_square?(location)
+
+  #returns true if sq is empty
+  def empty_sq?(location)
     x = location[0]
     y = location[1]
     return true if @game_board[x][y] == nil
   end
+  #returns true if enemy piece is at a sq.
+  def enemy_at_sq?(colour, location)
+    x = location[0]
+    y = location[1]
+    return false if @game_board[x][y] == nil
+    return true if @game_board[x][y].colour != colour
+  end
 
-  def enemy_at_square?(colour, location)
+  def valid_pawn_move?(pawn, target_sq, end_y, start_y)
+    #if it's in the same column, can only move two spaces if thats the pawn's
+    #first move. the pawn can only move straight if target_sq is empty
+    if end_y == start_y
+      if (target_sq[0] - pawn.location[0]).abs == 2
+        return false if pawn.already_moved == true
+      end
+      empty_sq?(target_sq)
+    else # pawn does not move straight, needs to be enemy piece diagonally in front
+      if enemy_at_square?(pawn.colour, target_sq)
+        true
+      end
+    end
+  end
 
+  #selects all enemy pawns on board and sets the instance variable
+  #allow_for_enpassant to false.
+  def turn_off_enpassant(colour)
+    colour == "white" ? enemy_pawn_colour = "black" : enemy_pawn_colour = "white"
+    enemy_pawns = all_pieces_on_board.select { |piece|
+      piece.class == Pawn &&  piece.colour == enemy_pawn_colour
+    }
+    enemy_pawns.each { |pawn| pawn.allow_for_enpassant = false }
+  end
+  
+  def pawn_specials(moved_piece, start_x, end_y)
+    if enpassant_possible?(moved_piece, start_x)
+      moved_piece.allow_for_enpassant = true
+    end
+
+    if valid_enpassant_move?(moved_piece.colour, start_x, end_y)
+      #'kill' the captured piece, it will lie on the starting row but the ending column
+      #of the enpassant-moving pawn.
+      @game_board[start_x][end_y] = nil
+    end
+
+    if promotion?(moved_piece)
+      moved_piece.promotion_allowed = true
+    end
+
+    moved_piece.already_moved = true
+  end
+
+  #captured pawn must move only two squares. The pawn must be captured immediately
+  #if not, enpassant is invalid. you arent required to make enpassant move.
+  def enpassant_possible?(pawn, start_x)
+    #it has to be just after a 2 step move was made my a pawn
+    if pawn.already_moved == true || (pawn.location[0] - start_x).abs != 2
+      return false
+    end
+    #check squares left and right of the potentially captured pawn
+    [pawn.location[1] + 1, pawn.location[1] - 1].any? { |y|
+      return false unless y.between?(0,7) # make sure it's on the board
+      potential_attacker = @game_board[pawn.location[0]][y]
+      if potential_attacker.class == Pawn && potential_attacker.colour != pawn.colour
+        return true
+      end
+    }
+  end
+
+  def promotion?(pawn)
+    return true if pawn.location[0] == 0 || pawn.location[0] == 7
+  end
+
+  def valid_enpassant_move?(colour, start_x, end_y)
+    potential_pawn = @game_board[start_x][end_y]
+    return true if potential_pawn.colour != colour && potential_pawn.class == Pawn && potential_pawn.allow_for_enpassant == true
   end
 
 end
-
-
-=begin
-class Board
-  @rook_white = Rook.new(white)
-
-  def legal_move?
-      return false if !@rook_white.moveset(rook_location).include?(move)
-      return false if move_blocked?(start, target)
-      return false if target_square_contains_own_colour?(target)
-  end
-
-  def move_blocked?(start, target)
-      # iterates over squares between start and target (NOT including target)
-      # return true if any of those squares don't contain a blank space
-  end
-
-  def target_square_contains_own_colour?(target)
-      # if target square contains enemy colour: return false
-      # if target square contains own colour: return true
-  end
-end
-
-play turn:
-  1) ask for coordinates of starting and ending sq
-  2) validate it:
-          - check that the starting and ending sq exist
-          - check the starting sq isnt empty
-          - check that the starting sq is same colour as player
-          - check the startingsq.class.moveset to see if the user-entered-move is contained in the moveset
-          - if !startingsq.class == Knight
-                  -check if the move is blocked (piece between start and target not including target)
-          - is there a piec on the target sq?
-               - Return illegal if it is own colour?
-          - NB: as an extra: check king's condition
-  3) call make_a_move method
-  4) call visualise board
-  5) identify if check-mate etc etc
-  6) check for draws
-  7)switch current player
-
-
-def make_a_move (staring sq, ending sq)
-  #assuming move is valid
-  #go to end, instantiate same object with same colour and ending coord
-  #take what object is on the starting sq, copy the class and colour, deletes it
-end
-
-def visualise_board
-  #iterate through the gameboard array and puts
-  @game_board[e.icon][e.icon]
-end
-
-class Board
-  # Bishop, what are your possible moves from sq 7,7.
-  # board needs to work out from the list of possible moves, which ones are valid
-  # getting route from starting sq and ending sq, and then checking if any value in that root is !equal " "
-  @gameboard.starting_square
-end
-
-=end
