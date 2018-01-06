@@ -28,7 +28,7 @@ attr_reader :game_board
   #take the starting and ending coord, and instantiate a new object on the
   #ending coord using the instance variables from the starting one.
   #then make the starting coord == nil
-  def move_piece (start_x, start_y, end_x, end_y)
+  def move_piece(start_x, start_y, end_x, end_y)
     piece = @game_board[start_x][start_y]
     target_location = [end_x, end_y]
     @game_board[end_x][end_y] = piece.class.new(target_location, piece.colour)
@@ -42,11 +42,9 @@ attr_reader :game_board
     turn_off_enpassant(piece.colour) #once a move has been made, disallow enpassant on enemy pawns.
   end
 
-  #check if piece exists on starting sq.
-  #check if piece can move to target sq.
+  #check if piece exists on starting sq. check if piece can move to target sq.
   #check if target sq is empty or has enemy piece (need to accommodate king later)
-  #check if pieces are in between
-  #check for pawn difficulties
+  #check if pieces are in between. check for pawn difficulties
   def valid_move?(start_x, start_y, end_x, end_y)
     piece = @game_board[start_x][start_y]
     return false if piece == nil
@@ -106,7 +104,7 @@ attr_reader :game_board
     }
     enemy_pawns.each { |pawn| pawn.allow_for_enpassant = false }
   end
-  
+
   def pawn_specials(moved_piece, start_x, end_y)
     if enpassant_possible?(moved_piece, start_x)
       moved_piece.allow_for_enpassant = true

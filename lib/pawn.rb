@@ -1,16 +1,16 @@
 require_relative "piece.rb"
 include Moves
 class Pawn < Piece
-  attr_accessor :moves, :already_moved, :allow_for_enpassant, :promotion
+  attr_accessor :moves, :already_moved, :allow_for_enpassant, :promotion_allowed
   attr_reader :icon
 
   def initialize(location, colour)
     super
     @moves = get_poss_moves(location)
-    @colour == "white" ? "U+2659" : "U+265F"
+    @colour == "white" ? @icon = "U+2659" : @icon = "U+265F"
     @already_moved = false
     @allow_for_enpassant = false
-    @promotion = false
+    @promotion_allowed = false
   end
 
   #array with all moves pawn can make on empty board
@@ -31,6 +31,8 @@ class Pawn < Piece
     }
     possible_moves
   end
+
+  private
 
   def white_pawn_moves(x,y)
     move_list = []
