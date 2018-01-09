@@ -65,6 +65,12 @@ describe Board do
       end
     end
 
+    context "given black rook moves from [0,0] to [2,0] where there is a piece in between" do
+      it "returns false" do
+        expect(board.valid_move?(0,0,2,0)).to eql(false)
+      end
+    end
+
     context "given black rook moves from [0,0] to an empty [1,0]" do
 
       it "returns true" do

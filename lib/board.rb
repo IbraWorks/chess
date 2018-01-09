@@ -95,8 +95,96 @@ attr_reader :game_board
     return false unless empty_sq?(target_sq) || enemy_at_sq?(piece.colour, target_sq)
 
     #need to check for spaces in between
+    unless piece.class == King || piece.class == Knight
+      return clear_path?(start_x, start_y, end_x, end_y)
+    end
 
-    #if it passes all rigirous checks, return true (not nil)
+    return true
+  end
+
+  def clear_path?(start_x, end_x, start_y, end_y)
+    if start_x == end_x
+      clear_horizontally?(start_x, end_x, start_y, end_y)
+    elsif start_y == end_y
+      clear_vertically?(start_x, end_x, start_y, end_y)
+    else
+      clear_diagonally?(start_x, end_x, start_y, end_y)
+    end
+  end
+
+  #cycle from the starting col to the ending col and seeing if each sq == nil
+  #if it doesnt, return false. because some pieces can move 'backwards' along
+  #the row (x-1 etc), need to define which direction you are checking
+  def clear_horizontally?(start_x, end_x, start_y, end_y)
+    #identify 'starting' column where you begin checking each sq.
+    #and identify the 'ending' column
+    start_y < end_y ? start_column = start_y : start_column = end_y
+    start_column == start_y ? end_column = end_y : end_column = start_y
+
+    #go to the next sq and check if its nil until you reach the ending column
+    start_column += 1
+    until start_column == end_column
+      return false if @game_board[start_x][start_column] != nil
+      start_column += 1
+    end
+    return true
+  end
+
+  #same as clear_horizontally?
+  def clear_vertically?(start_x, end_x, start_y, end_y)
+    start_x < end_x ? start_row = start_x : start_row = end_x
+    start_row == start_x ? end_row = end_x : end_row = start_x
+
+    start_row += 1
+    until start_row == end_row
+      return false if @game_board[start_row][start_y] != nil
+      start_row += 1
+    end
+    return true
+  end
+
+  #same thinking as clear_horizontally?
+  def clear_diagonally?(start_x, end_x, start_y, end_y)
+    row = start_x
+    column = start_y
+
+    if start_x < end_x && start_y < end_y
+      row += 1
+      column += 1
+      until row == end_x
+        return false if @game_board[row][column] != nil
+        row += 1
+        column += 1
+      end
+
+    elsif start_x < end_x && start_y >= end_y
+      row += 1
+      column -= 1
+      until row == end_x
+        return false if @game_board[row][column] != nil
+        row += 1
+        column -= 1
+      end
+
+    elsif start_x >= end_x && start_y >= end_y
+      row -= 1
+      column -= 1
+      until row == end_x
+        return false if @game_board[row][column] != nil
+        row -= 1
+        column -= 1
+      end
+
+    elsif start_x >= end_x && start_y < end_y
+      row -= 1
+      column += 1
+      until row == end_x
+        return false if @game_board[row][column] != nil
+        row -= 1
+        column += 1
+      end
+    end
+
     return true
   end
 
