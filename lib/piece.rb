@@ -3,14 +3,14 @@ module Moves
   def diagonally_left_moves(x,y)
     move_list = []
     1.upto(7) { |e| move_list << [x + e, y - e]  } # go down-left
-    1.upto(7) { |e| move_list << [x - e, y + e]  } # go up-left
+    1.upto(7) { |e| move_list << [x - e, y - e]  } # go up-left
     return move_list
   end
 
   def diagonally_right_moves(x,y)
     move_list = []
     1.upto(7) { |e| move_list << [x + e, y + e]  } # go down-right
-    1.upto(7) { |e| move_list << [x - e, y - e]  } # go up-right
+    1.upto(7) { |e| move_list << [x - e, y + e]  } # go up-right
     return move_list
   end
 
