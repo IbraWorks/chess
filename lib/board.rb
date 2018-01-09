@@ -1,9 +1,43 @@
+require_relative "bishop.rb"
+require_relative "game.rb"
+require_relative "king.rb"
+require_relative "knight.rb"
+require_relative "pawn.rb"
+require_relative "piece.rb"
+require_relative "queen.rb"
+require_relative "rook.rb"
 
 class Board
 attr_reader :game_board
 
   def initialize
     @game_board = Array.new(8) {Array.new(8, " ") }
+
+    @game_board[0][0] = Rook.new([0,0], "black")
+    @game_board[0][1] = Knight.new([0,1], "black")
+    @game_board[0][2] = Bishop.new([0,2], "black")
+    @game_board[0][3] = Queen.new([0,3], "black")
+    @game_board[0][4] = King.new([0,4], "black")
+    @game_board[0][5] = Bishop.new([0,5], "black")
+    @game_board[0][6] = Knight.new([0,6], "black")
+    @game_board[0][7] = Rook.new([0,7], "black")
+
+    @game_board[7][0] = Rook.new([7,0], "white")
+    @game_board[7][1] = Knight.new([7,1], "white")
+    @game_board[7][2] = Bishop.new([7,2], "white")
+    @game_board[7][3] = Queen.new([7,3], "white")
+    @game_board[7][4] = King.new([7,4], "white")
+    @game_board[7][5] = Bishop.new([7,5], "white")
+    @game_board[7][6] = Knight.new([7,6], "white")
+    @game_board[7][7] = Rook.new([7,7], "white")
+
+    0.upto(7) {|y| @game_board[6][y] = Pawn.new([6,y], "white")}
+    0.upto(7) {|y| @game_board[1][y] = Pawn.new([1,y], "black")}
+
+    0.upto(7) {|y| @game_board[5][y] = nil}
+    0.upto(7) {|y| @game_board[4][y] = nil}
+    0.upto(7) {|y| @game_board[3][y] = nil}
+    0.upto(7) {|y| @game_board[2][y] = nil}
   end
 
   def display_board
@@ -46,16 +80,24 @@ attr_reader :game_board
   #check if target sq is empty or has enemy piece (need to accommodate king later)
   #check if pieces are in between. check for pawn difficulties
   def valid_move?(start_x, start_y, end_x, end_y)
+    return false if start_x > 7 || start_x < 0
+    return false if start_y > 7 || start_y < 0
+    return false if end_x > 7 || end_x < 0
+    return false if end_y > 7 || end_y < 0
     piece = @game_board[start_x][start_y]
     return false if piece == nil
 
     target_sq = [end_x, end_y]
-    return false if !piece.moves.include?(target_sq)
+    return false unless piece.moves.include? target_sq
 
     return valid_pawn_move?(piece, target_sq, end_y, start_y) if piece.class == Pawn
+
     return false unless empty_sq?(target_sq) || enemy_at_sq?(piece.colour, target_sq)
 
     #need to check for spaces in between
+
+    #if it passes all rigirous checks, return true (not nil)
+    return true
   end
 
   #go through each row and select square that != nil
@@ -90,7 +132,9 @@ attr_reader :game_board
       empty_sq?(target_sq)
     else # pawn does not move straight, needs to be enemy piece diagonally in front
       if enemy_at_square?(pawn.colour, target_sq)
-        true
+        return true
+      else
+        valid_enpassant_move?(pawn.colour, pawn.target_sq[0], end_y)
       end
     end
   end
@@ -141,6 +185,7 @@ attr_reader :game_board
   end
 
   def promotion?(pawn)
+    #pawn cant move backwards so no need to check for colour
     return true if pawn.location[0] == 0 || pawn.location[0] == 7
   end
 

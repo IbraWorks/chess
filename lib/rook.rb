@@ -1,22 +1,25 @@
 require_relative "piece.rb"
-include Moves
+
 class Rook < Piece
+  include Moves
   attr_accessor :moves
   attr_reader :icon
   def initialize(location, colour)
     super
-    @moves = get_poss_moves(location)
-    @colour == "white" ? @icon = "U+2656" : @icon = "U+265C"
+    @moves = get_poss_moves
+    @colour == "white" ? @icon = "\U+2656" : @icon = "\U+265C"
   end
 
   #rook moves straight vertically or horizontally, how many times it wants
-  def get_poss_moves(location)
-    x = location[0] #x is row
-    y = location[1] #y is column
+  def get_poss_moves
+    x = @location[0] #x is row
+    y = @location[1] #y is column
     move_list = [] #quarter circle forward punch
 
-    move_list << vertical_moves(x,y)
-    move_list << horizontal_moves(x,y)
+    verticals = vertical_moves(x,y)
+    verticals.each { |move| move_list << move }
+    horizontals = horizontal_moves(x,y)
+    horizontals.each { |move| move_list << move }
 
     #make sure move is not off the board
     possible_moves = move_list.select { |e|
