@@ -77,7 +77,7 @@ attr_reader :game_board
   end
 
   #check if piece exists on starting sq. check if piece can move to target sq.
-  #check if target sq is empty or has enemy piece (need to accommodate king later)
+  #check if target sq is empty or has enemy piece
   #check if pieces are in between. check for pawn difficulties
   def valid_move?(start_x, start_y, end_x, end_y)
     return false if start_x > 7 || start_x < 0
@@ -88,113 +88,176 @@ attr_reader :game_board
     return false if piece == nil
 
     target_sq = [end_x, end_y]
-    return false unless piece.moves.include? target_sq
+    return false unless piece.moves.include?(target_sq)
 
     return valid_pawn_move?(piece, target_sq, end_y, start_y) if piece.class == Pawn
 
     return false unless empty_sq?(target_sq) || enemy_at_sq?(piece.colour, target_sq)
 
-    #need to check for spaces in between
     unless piece.class == King || piece.class == Knight
       return clear_path?(start_x, start_y, end_x, end_y)
     end
-
-    return true
+    true
   end
 
-  def clear_path?(start_x, end_x, start_y, end_y)
-    if start_x == end_x
-      clear_horizontally?(start_x, end_x, start_y, end_y)
-    elsif start_y == end_y
-      clear_vertically?(start_x, end_x, start_y, end_y)
-    else
-      clear_diagonally?(start_x, end_x, start_y, end_y)
+   def clear_path?(start_x, start_y, end_x, end_y)
+     if start_x == end_x
+       clear_horizontally?(start_x, start_y, end_x, end_y)
+     elsif start_y == end_y
+       clear_vertically?(start_x, start_y, end_x, end_y)
+     else
+       clear_diagonally?(start_x, start_y, end_x, end_y)
+     end
+   end
+
+   #cycle from the starting col to the ending col and seeing if each sq == nil
+   #if it doesnt, return false. because some pieces can move 'backwards' along
+   #the row (x-1 etc), need to define which direction you are checking
+   #identify 'starting' column where you begin checking each sq.
+   #and identify the 'ending' column
+   #go to the next sq and check if its nil until you reach the ending column
+   def clear_horizontally?(start_x, start_y, end_x, end_y)
+     start_y < end_y ? column_start = start_y : column_start = end_y
+     column_start == start_y ? column_end = end_y : column_end = start_y
+     column_start += 1
+     until column_start == column_end
+       return false unless @game_board[start_x][column_start] == nil
+       column_start += 1
+     end
+     true
+   end
+
+   #same as clear_horizontally?
+   def clear_vertically?(start_x, start_y, end_x, end_y)
+     start_x < end_x ? row_start = start_x : row_start = end_x
+     row_start == start_x ? row_end = end_x : start_x
+     row_start += 1
+     until row_start == row_end
+       return false unless @game_board[row_start][start_y] == nil
+       row_start += 1
+     end
+     true
+   end
+
+   #same thinking as clear_horizontally?
+   def clear_diagonally?(start_x, start_y, end_x, end_y)
+     row = start_x
+     column = start_y
+     if end_x > start_x && end_y > start_y
+       row += 1
+       column += 1
+       until row == end_x
+         return false unless @game_board[row][column] == nil
+         row += 1
+         column += 1
+       end
+     elsif end_x > start_x && end_y <= start_y
+       row += 1
+       column -= 1
+       until row == end_x
+         return false unless @game_board[row][column] == nil
+         row += 1
+         column -= 1
+       end
+     elsif end_x <= start_x && end_y <= start_y
+       row -= 1
+       column -= 1
+       until row == end_x
+         return false unless @game_board[row][column] == nil
+         row -= 1
+         column -= 1
+       end
+     elsif end_x <= start_x && end_y > start_y
+       row -= 1
+       column += 1
+       until row == end_x
+         return false unless @game_board[row][column] == nil
+         row -= 1
+         column += 1
+       end
+     end
+     true
+   end
+
+  def locate_king(colour)
+    king = all_pieces_on_board.select do |piece|
+      piece.class == King && piece.colour == colour
+    end[0] #return the first (only) value in the array
+  end
+
+  #given king pos and colour, find all enemy pieces on board
+  #then select those that have a valid_move to attack the king
+  def pieces_can_kill_king(king_pos, king_colour)
+    enemy_pieces(king_colour).select do |piece|
+      valid_move?(piece.location[0], piece.location[1], king_pos[0], king_pos[1])
     end
   end
 
-  #cycle from the starting col to the ending col and seeing if each sq == nil
-  #if it doesnt, return false. because some pieces can move 'backwards' along
-  #the row (x-1 etc), need to define which direction you are checking
-  def clear_horizontally?(start_x, end_x, start_y, end_y)
-    #identify 'starting' column where you begin checking each sq.
-    #and identify the 'ending' column
-    start_y < end_y ? start_column = start_y : start_column = end_y
-    start_column == start_y ? end_column = end_y : end_column = start_y
-
-    #go to the next sq and check if its nil until you reach the ending column
-    start_column += 1
-    until start_column == end_column
-      return false if @game_board[start_x][start_column] != nil
-      start_column += 1
-    end
-    return true
+  def enemy_pieces(king_colour)
+    all_pieces_on_board.select { |piece| piece.colour != king_colour }
   end
 
-  #same as clear_horizontally?
-  def clear_vertically?(start_x, end_x, start_y, end_y)
-    start_x < end_x ? start_row = start_x : start_row = end_x
-    start_row == start_x ? end_row = end_x : end_row = start_x
-
-    start_row += 1
-    until start_row == end_row
-      return false if @game_board[start_row][start_y] != nil
-      start_row += 1
-    end
-    return true
+  def check?(king_pos, king_colour)
+    !pieces_can_kill_king(king_pos, king_colour).empty?
   end
 
-  #same thinking as clear_horizontally?
-  def clear_diagonally?(start_x, end_x, start_y, end_y)
-    row = start_x
-    column = start_y
+  def check_mate?(king_colour)
+    #find king piece
+    king = locate_king(king_colour)
+    return false if !check?(king.location, king_colour)
 
-    if start_x < end_x && start_y < end_y
-      row += 1
-      column += 1
-      until row == end_x
-        return false if @game_board[row][column] != nil
-        row += 1
-        column += 1
-      end
+    return false if can_king_escape?(king, king_colour)
 
-    elsif start_x < end_x && start_y >= end_y
-      row += 1
-      column -= 1
-      until row == end_x
-        return false if @game_board[row][column] != nil
-        row += 1
-        column -= 1
-      end
+    attacking_pieces = pieces_can_kill_king(king.location, king_colour)
+    if attacking_pieces.length == 1
+      return false if can_attackers_be_captured?(attacking_pieces[0], king_colour)
+      #if attacking_pieces[0].class == Rook || attacking_pieces[0].class == Bishop || attacking_pieces[0].class == Queen
 
-    elsif start_x >= end_x && start_y >= end_y
-      row -= 1
-      column -= 1
-      until row == end_x
-        return false if @game_board[row][column] != nil
-        row -= 1
-        column -= 1
-      end
-
-    elsif start_x >= end_x && start_y < end_y
-      row -= 1
-      column += 1
-      until row == end_x
-        return false if @game_board[row][column] != nil
-        row -= 1
-        column += 1
-      end
+      #end
     end
 
-    return true
   end
 
-  #go through each row and select square that != nil
+  #find king's valid moves, get the ones that lead to no enemy piece being
+  #able to attack the king. if there arent any, return false.
+  def can_king_escape?(king, king_colour)
+    king_valid_moves = king.moves.select { |move|
+      valid_move?(king.location[0],king.location[1], move[0], move[1])
+    }
+
+    escaping_moves = king_valid_moves.select { |move|
+      pieces_can_kill_king(move, king_colour).empty?
+    }
+
+    escaping_moves.empty? ? false : true
+  end
+
+  #def can_attack_be_blocked?()
+
+  #end
+
+  def can_attackers_be_captured?(attacker, king_colour)
+    friendlies = all_pieces_on_board.select {|piece| piece.colour == king_colour}
+    friendlies.any? do |piece|
+      return false if piece.class == King
+      valid_moves = piece.moves.select { |move|
+        valid_move?(piece.location[0], piece.location[1], move[0], move[1])
+      }
+      valid_moves.include? (attacker.location)
+    end
+  end
+
   def all_pieces_on_board
     pieces = @game_board.map { |row|
       row.select { |square| square != nil  }
      }
     pieces = pieces.flatten #place all pieces in a one dimensional array
   end
+
+
+
+  #go through each row and select square that != nil
+
 
   #returns true if sq is empty
   def empty_sq?(location)
@@ -279,7 +342,7 @@ attr_reader :game_board
 
   def valid_enpassant_move?(colour, start_x, end_y)
     potential_pawn = @game_board[start_x][end_y]
-    return true if potential_pawn.colour != colour && potential_pawn.class == Pawn && potential_pawn.allow_for_enpassant == true
+    return true if potential_pawn.class == Pawn && potential_pawn.colour != colour && potential_pawn.allow_for_enpassant == true
   end
 
 end
