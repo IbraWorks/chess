@@ -91,7 +91,7 @@ attr_reader :game_board
     return false unless piece.moves.include?(target_sq)
 
     return valid_pawn_move?(piece, target_sq, end_y, start_y) if piece.class == Pawn
-
+    
     return false unless empty_sq?(target_sq) || enemy_at_sq?(piece.colour, target_sq)
 
     unless piece.class == King || piece.class == Knight
@@ -198,7 +198,7 @@ attr_reader :game_board
   end
 
   def check?(king_pos, king_colour)
-    !pieces_can_kill_king(king_pos, king_colour).empty?
+    pieces_can_kill_king(king_pos, king_colour).empty? ? false : true
   end
 
   def check_mate?(king_colour)
@@ -211,11 +211,12 @@ attr_reader :game_board
     attacking_pieces = pieces_can_kill_king(king.location, king_colour)
     if attacking_pieces.length == 1
       return false if can_attackers_be_captured?(attacking_pieces[0], king_colour)
-      #if attacking_pieces[0].class == Rook || attacking_pieces[0].class == Bishop || attacking_pieces[0].class == Queen
-
-      #end
+      if attacking_pieces[0].class == Rook || attacking_pieces[0].class == Bishop || attacking_pieces[0].class == Queen
+        return false if can_attack_be_blocked?(king.location, king_colour)
+      end
     end
 
+    true
   end
 
   #find king's valid moves, get the ones that lead to no enemy piece being
@@ -232,9 +233,35 @@ attr_reader :game_board
     escaping_moves.empty? ? false : true
   end
 
-  #def can_attack_be_blocked?()
+  def friendly_pieces(king_colour)
+    all_pieces_on_board.select { |piece| piece.colour == king_colour }
+  end
 
-  #end
+  def all_valid_moves(location, moves)
+    moves.select { |move| valid_move?(location[0], location[1], move[0], move[1]) }
+  end
+
+  def can_attack_be_blocked?(king_pos, king_colour)
+    friendlies = friendly_pieces(king_colour)
+    #cycle through each friendly piece's moves and see if any move would lead
+    #to king being out of check
+    friendlies.each do |friendly|
+      #copy the game_board before you make a test move
+      current_board = Marshal.load(Marshal.dump(@game_board))
+      valid_moves = all_valid_moves(friendly.location, friendly.moves)
+      valid_moves.each do |move|
+        @game_board[friendly.location[0]][friendly.location[1]] == nil
+        @game_board[move[0]][move[1]] = friendly.class.new(move, king_colour)
+        if check?(king_pos, king_colour) == false
+          @game_board = current_board # reset game_board to it's state before the test moves
+          return true
+        else
+          @game_board = current_board # reset game_board to it's state before the test moves
+        end
+      end
+    end
+    false
+  end
 
   def can_attackers_be_captured?(attacker, king_colour)
     friendlies = all_pieces_on_board.select {|piece| piece.colour == king_colour}
