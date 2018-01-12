@@ -146,14 +146,6 @@ describe Board do
       end
     end
 
-    context "given black bishop moves and causes it's king at [0,4] to be in check" do
-      it "returns false" do
-        board.game_board[1][4] = Bishop.new([1,4], "black") #replace pawn with bishop so it can move out of the way easily
-        board.game_board[4][4] = Rook.new([4,4], "white") # rook will check king
-        expect(board.valid_move?(1,4,2,5)).to eql(false)
-      end
-    end
-
   end
 
   describe "#check?" do
@@ -186,44 +178,72 @@ describe Board do
       end
     end
 
-  end
-
-  describe "#check_mate?"
-  let(:board){Board.new}
-
-  context "given a black king on starting board" do
-    it "returns false" do
-      king_location = board.locate_king("black").location
-      expect(board.check_mate?("black")).to eql(false)
-    end
-  end
-
-  context "given black king in check can move out of check" do
-    it "returns false" do
-      board.game_board[1][4] = nil #get rid of blocking pawn
-      board.game_board[4][4] = Queen.new([4,4], "white") # attacking queen
-      board.game_board[1][3] = nil #get rid of pawn so king can move out of check
-      expect(board.check_mate?("black")).to eql(false)
-    end
-  end
-
-  context "given a black king at [0,4] in check by white knight at [2,5] with no black knight" do
+    context "given a black king at [0,4] with an unobstructed path to "\
+        "white queen at [4,4]" do
     it "returns true" do
-      board.game_board[0][6] = nil #erase knight that can save king
-      board.game_board[1][4] = Knight.new([1,4], "black") #just to test
-      board.game_board[1][6] = nil # erase pawn that can save king
-      board.game_board[2][5] = Knight.new([2,5], "white") #attacking knight
-      expect(board.check_mate?("black")).to eql(true)
+      board.game_board[1][4] = nil
+      board.game_board[4][4] = Queen.new([4,4], "white")
+      king_location = board.locate_king("black").location
+      expect(board.check?(king_location, "black")).to eql(true)
     end
   end
 
-  context "given black king in check with a friendly piece that can block the attack" do
-    it "returns false" do
-      board.game_board[1][4] = nil
-      board.game_board[4][4] = Rook.new([4,4], "white")
-      board.game_board[2][3] = Bishop.new([2,3], "black") #piece that will block attack
-      expect(board.check_mate?("black")).to eql(false)
+  end
+
+  describe "#move_checks_own_king?" do
+    let(:board){Board.new}
+
+    context "when black rook moves and leaves king in a vulnerable position" do
+      it "returns true" do
+        board.game_board[1][4] = nil
+        board.game_board[2][4] = Rook.new([2,4], "black")
+        board.game_board[4][4] = Queen.new([4,4], "white")
+        expect(board.move_checks_own_king?(2,4,2,5,"black")).to eql(true)
+      end
     end
+
+  end
+
+
+  describe "#check_mate?" do
+
+    let(:board){Board.new}
+
+    context "given a black king on starting board" do
+      it "returns false" do
+        king_location = board.locate_king("black").location
+        expect(board.check_mate?("black")).to eql(false)
+      end
+    end
+
+    context "given black king in check can move out of check" do
+      it "returns false" do
+        board.game_board[1][4] = nil #get rid of blocking pawn
+        board.game_board[4][4] = Queen.new([4,4], "white") # attacking queen
+        board.game_board[1][3] = nil #get rid of pawn so king can move out of check
+        expect(board.check_mate?("black")).to eql(false)
+      end
+    end
+
+    context "given a black king at [0,4] in check by white knight at [2,5] with no black knight" do
+      it "returns true" do
+        board.game_board[0][6] = nil #erase knight that can save king
+        board.game_board[1][4] = Knight.new([1,4], "black") #just to test
+        board.game_board[1][6] = nil # erase pawn that can save king
+        board.game_board[2][5] = Knight.new([2,5], "white") #attacking knight
+        expect(board.check_mate?("black")).to eql(true)
+      end
+    end
+
+    context "given black king in check with a friendly piece that can block the attack" do
+      it "returns false" do
+        board.game_board[1][4] = nil
+        board.game_board[4][4] = Rook.new([4,4], "white")
+        board.game_board[2][3] = Bishop.new([2,3], "black") #piece that will block attack
+        expect(board.check_mate?("black")).to eql(false)
+      end
+    end
+
   end
 
 end
