@@ -137,12 +137,20 @@ describe Board do
       end
     end
 
-    context "test for check" do
+    context "given black queen wants to attack king vertically with piece in between" do
       it "returns false" do
         board.move_piece(1,4,2,4) #move black pawn
         board.move_piece(0,3,2,5) #move queen next to it
         board.move_piece(2,5,3,4) #move queen in front of it so that its same row as white king
         expect(board.valid_move?(3,4,7,4)).to eql(false)
+      end
+    end
+
+    context "given black bishop moves and causes it's king at [0,4] to be in check" do
+      it "returns false" do
+        board.game_board[1][4] = Bishop.new([1,4], "black") #replace pawn with bishop so it can move out of the way easily
+        board.game_board[4][4] = Rook.new([4,4], "white") # rook will check king
+        expect(board.valid_move?(1,4,2,5)).to eql(false)
       end
     end
 
