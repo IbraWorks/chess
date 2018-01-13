@@ -117,6 +117,21 @@ attr_reader :game_board
     end
   end
 
+  def can_player_avoid_stalemate?(colour)
+    potential_moves = []
+    friendlies = friendly_pieces(colour)
+
+    friendlies.each do |friendly|
+      valid_moves = all_valid_moves(friendly.location, friendly.moves)
+      valid_moves.each do |move|
+        if !move_checks_own_king?(friendly.location[0], friendly.location[1], move[0], move[1], colour)
+          potential_moves << move
+        end
+      end
+    end
+    potential_moves.empty? ? false : true
+  end
+
   def no_pieces_in_between?(start_x, start_y, end_x, end_y)
     if start_x == end_x
       starting_column = start_y < end_y ? start_y : end_y

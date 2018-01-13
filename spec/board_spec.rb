@@ -204,6 +204,24 @@ describe Board do
 
   end
 
+  describe "#can_player_avoid_stalemate?" do
+    let(:board){Board.new}
+
+    context "given player can not make a move that won't lead them into check" do
+      it "returns true" do
+        board.instance_variable_set(:@game_board, board.game_board.map do |row|
+            row.map { |square| nil }
+        end)
+
+        board.game_board[7][5] = King.new([7,5], "black")
+        board.game_board[6][5] = Bishop.new([6,5], "white")
+        board.game_board[5][5] = Queen.new([5,5], "white")
+        expect(board.can_player_avoid_stalemate?("black")).to eql(false)
+      end
+    end
+
+  end
+
 
   describe "#check_mate?" do
 
