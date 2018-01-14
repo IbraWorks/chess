@@ -232,14 +232,17 @@ attr_reader :game_board
   def check_mate?(king_colour)
     #find king piece
     king = locate_king(king_colour)
+    #puts "check: #{check?(king.location, king_colour)}"
     return false if !check?(king.location, king_colour)
-
+    #puts "can kin es: #{can_king_escape?(king, king_colour)}"
     return false if can_king_escape?(king, king_colour)
 
     attacking_pieces = pieces_can_kill_king(king.location, king_colour)
     if attacking_pieces.length == 1
+      #puts "can att be cap: #{can_attackers_be_captured?(attacking_pieces[0], king_colour)}"
       return false if can_attackers_be_captured?(attacking_pieces[0], king_colour)
       if attacking_pieces[0].class == Rook || attacking_pieces[0].class == Bishop || attacking_pieces[0].class == Queen
+        #puts "can att be blocked: #{can_attack_be_blocked?(king.location, king_colour)}"
         return false if can_attack_be_blocked?(king.location, king_colour)
       end
     end
@@ -252,12 +255,15 @@ attr_reader :game_board
   def can_king_escape?(king, king_colour)
     king_valid_moves = king.moves.select { |move|
       valid_move?(king.location[0],king.location[1], move[0], move[1])
+      #puts "king valid moves: #{king_valid_moves}"
     }
+
 
     escaping_moves = king_valid_moves.select { |move|
       pieces_can_kill_king(move, king_colour).empty?
-    }
 
+    }
+    #puts "escaping moves: #{escaping_moves}"
     escaping_moves.empty? ? false : true
   end
 
@@ -277,10 +283,14 @@ attr_reader :game_board
       #copy the game_board before you make a test move
       current_board = Marshal.load(Marshal.dump(@game_board))
       valid_moves = all_valid_moves(friendly.location, friendly.moves)
+      puts "valid_moves : #{valid_moves}"
       valid_moves.each do |move|
-        @game_board[friendly.location[0]][friendly.location[1]] == nil
+        @game_board[friendly.location[0]][friendly.location[1]] = nil
+        puts "king's previous position before move: #{@game_board[friendly.location[0]][friendly.location[1]]}" #should be nil
         @game_board[move[0]][move[1]] = friendly.class.new(move, king_colour)
-        if check?(king_pos, king_colour) == false
+        puts "kings new position: #{@game_board[move[0]][move[1]].location}"
+        puts "check?: #{check?(king_pos, king_colour)}, move: #{move}"
+        if !check?(king_pos, king_colour)
           @game_board = current_board # reset game_board to it's state before the test moves
           return true
         else
