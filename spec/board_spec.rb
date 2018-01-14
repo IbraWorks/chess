@@ -44,6 +44,15 @@ describe Board do
       end
     end
 
+    context "given white rook moving from [7,0] tp [4,0]" do
+      it "moves rook to [4,0]" do
+        board.move_piece(7,0,4,0)
+        expect(board.game_board[7][0]).to eql(nil)
+        expect(board.game_board[4][0].class).to eql(Rook)
+        expect(board.game_board[4][0].colour).to eql("white")
+      end
+    end
+
     context "given black rook moving from [0,0] to [3,0]" do
       it "moves rook piece from [0,0] to [3,0]" do
         board.move_piece(0,0,3,0)
@@ -61,6 +70,23 @@ describe Board do
         expect(board.game_board[5][0].colour).to eql("white")
       end
     end
+    context "given white queen moves to [1,3] where black pawn is located" do
+      it "moves queen to [1,3] and captures black pawn" do
+        board.move_piece(7,3,1,3)
+        expect(board.game_board[7][3]).to eql(nil)
+        expect(board.game_board[1][3].class).to eql(Queen)
+        expect(board.game_board[1][3].colour).to eql("white")
+      end
+    end
+
+    context "given black pawn moves from location [1,7] to [3,7]" do
+      it "moves black pawn to [3,7]" do
+        board.move_piece(1,7,3,7)
+        expect(board.game_board[1][7]).to eql(nil)
+        expect(board.game_board[3][7].class).to eql(Pawn)
+        expect(board.game_board[3][7].colour).to eql("black")
+      end
+    end
 
     context "given black pawn moves from [1,2] to [3,2] with white pawn at [3,3]" do
       it "sets @allow_for_enpassant to be true on the black pawn" do
@@ -73,11 +99,46 @@ describe Board do
     end
 
     context "given black rook moves from [0,0] to [7,0] where white rook is located" do
-      it "moves black rook to [5,0] and captures white rook" do
+      it "moves black rook to [7,0] and captures white rook" do
         board.move_piece(0,0,7,0)
         expect(board.game_board[0][0]).to eql(nil)
         expect(board.game_board[7][0].class).to eql(Rook)
         expect(board.game_board[7][0].colour).to eql("black")
+      end
+    end
+
+    context "given white pawn moves from [6,7] to [5,7] then [4,7] with black pawn at [4,6]" do
+      it "does not set @allow_for_enpassant to true for the white pawn" do
+        expect(board.game_board[6][7].allow_for_enpassant).to eql(false)
+        board.move_piece(6,7,5,7)
+        board.move_piece(5,7,4,7)
+        board.move_piece(1,6,3,6)
+        board.move_piece(3,6,4,6)
+        expect(board.game_board[4][7].allow_for_enpassant).to eql(false)
+      end
+    end
+
+    context "white pawn moves from [6,7] to [4,7] with black pawn at [4,6] and black taking another turn" do
+      it "does not set @allow_for_enpassant to true for the white pawn after blacks turn" do
+        expect(board.game_board[6][7].allow_for_enpassant).to eql(false)
+        board.move_piece(1,6,3,6)
+        board.move_piece(3,6,4,6)
+        board.move_piece(6,7,4,7)
+        expect(board.game_board[4][7].allow_for_enpassant).to eql(true)
+        board.move_piece(1,0,3,0)
+        expect(board.game_board[4][7].allow_for_enpassant).to eql(false)
+      end
+    end
+
+    context "given white pawn at [3,1] exercising en_passant on a black pawn at [3,2] " do
+      it "moves white pawn to [2,2] and captures black pawn" do
+        board.move_piece(6,1,4,1)
+        board.move_piece(4,1,3,1)
+        board.move_piece(1,2,3,2)
+        board.move_piece(3,1,2,2)
+        expect(board.game_board[3][2]).to eql(nil)
+        expect(board.game_board[2][2].class).to eql(Pawn)
+        expect(board.game_board[2][2].colour).to eql("white")
       end
     end
 
@@ -90,6 +151,15 @@ describe Board do
       end
     end
 
+  end
+
+  describe "#piece_is_players_piece?" do
+    let(:board){Board.new}
+    context "given location of a player's piece" do
+      it "returns true" do
+        expect(board.piece_is_players_piece?([0,3], "black")).to eql(true)
+      end
+    end
   end
 
   describe "#valid_move?" do
@@ -119,15 +189,59 @@ describe Board do
          expect(board.valid_move?(1,0,2,0)).to eql(true)
       end
     end
+    context "given black pawn moving from [1,0] to [3,0]" do
+      it "returns true" do
+        expect(board.valid_move?(1,0,3,0)).to eql(true)
+      end
+    end
+
+    context "given black pawn moving from [2,0] to [4,0] after it has moved already" do
+      it "returns false" do
+        board.move_piece(1,0,2,0)
+        expect(board.valid_move?(2,0,4,0)).to eql(false)
+      end
+    end
+
+    context "given black pawn moves from [1,3] to [2,4] on starting board" do
+      it "returns false" do
+        expect(board.valid_move?(1,3,2,4)).to eql(false)
+      end
+    end
+
+    context "given white pawn moves from [6,5] to [5,4] to capture black pawn" do
+      it "returns true" do
+        board.game_board[5][4] = Pawn.new([5,4], "black")
+        expect(board.valid_move?(6,5,5,4)).to eql(true)
+      end
+    end
+
+    context "given white pawn moves from [6,0] to [4,0]" do
+      it "returns true" do
+        expect(board.valid_move?(6,0,4,0)).to eql(true)
+      end
+    end
+
     context "given black rook moves from [0,0] to [2,0] where there is a piece in between" do
       it "returns false" do
         expect(board.valid_move?(0,0,2,0)).to eql(false)
       end
     end
-    context "given black rook moves from [0,0] to an empty [1,0]" do
+    context "given black rook moves from [0,0] to an empty [2,0]" do
       it "returns true" do
         board.game_board[1][0] = nil
-        expect(board.valid_move?(0,0,1,0)).to eql(true)
+        expect(board.valid_move?(0,0,2,0)).to eql(true)
+      end
+    end
+
+    context "given white knight moves from [7,1] to [5,0]" do
+      it "returns true" do
+        expect(board.valid_move?(7,1,5,0)).to eql(true)
+      end
+    end
+
+    context "given white knight moves from [7,1] to occupied [6,3] on starting board" do
+      it "returns false" do
+        expect(board.valid_move?(7,1,6,3)).to eql(false)
       end
     end
 
@@ -143,6 +257,63 @@ describe Board do
         board.move_piece(0,3,2,5) #move queen next to it
         board.move_piece(2,5,3,4) #move queen in front of it so that its same row as white king
         expect(board.valid_move?(3,4,7,4)).to eql(false)
+      end
+    end
+
+    context "given bishop moves from [0,5] to [2,7] with nothing in between" do
+      it "returns true" do
+        board.game_board[1][6] = nil
+        expect(board.valid_move?(0,5,2,7)).to eql(true)
+      end
+    end
+
+    context "white queen moves to a position occupied by white pawn" do
+      it "returns false" do
+        board.game_board[5][5] = Queen.new([5,5], "black")
+        expect(board.valid_move?(5,5,1,5)).to eql(false)
+      end
+    end
+
+    context "black king moves from [5,5] to [3,5] with no spaces in between" do
+      it "returns false" do
+        board.game_board[5][5] = King.new([5,5], "black")
+        expect(board.valid_move?(5,5,3,5)).to eql(false)
+      end
+    end
+
+    context "black king moves from [5,5] to [4,5]" do
+      it "returns true" do
+        board.game_board[5][5] = King.new([5,5], "black")
+        expect(board.valid_move?(5,5,4,5)).to eql(true)
+      end
+    end
+
+    context "black pawn at [4,6] taking white pawn [4,5] via enpassant to [5,5]" do
+      it "returns true" do
+        board.move_piece(1,6,3,6)
+        board.move_piece(3,6,4,6)
+        board.move_piece(6,5,4,5)
+        expect(board.valid_move?(4,6,5,5)).to eql(true)
+      end
+    end
+
+    context "given black pawn tries same move above ([4,6] to [5,5] capturing white pawn at [4,5]) but before capturing via en passant plays another move" do
+      it "returns false" do
+        board.move_piece(1,6,3,6)
+        board.move_piece(3,6,4,6)
+        board.move_piece(6,5,4,5)
+        board.move_piece(1,2,2,2)
+        expect(board.valid_move?(4,6,5,5)).to eql(false)
+      end
+    end
+
+    context "same move by black pawn ([4,6] to [5,5] capturing white pawn at [4,5]) but white pawn gets to [4,5] in two moves" do
+      it "returns false" do
+        board.move_piece(1,6,3,6)
+        board.move_piece(3,6,4,6)
+        board.move_piece(6,5,5,5)
+        board.move_piece(5,5,4,5)
+        expect(board.valid_move?(4,6,5,5)).to eql(false)
       end
     end
 

@@ -64,8 +64,8 @@ attr_reader :game_board
   #then make the starting coord == nil
   def move_piece(start_x, start_y, end_x, end_y)
     piece = @game_board[start_x][start_y]
-    target_location = [end_x, end_y]
-    @game_board[end_x][end_y] = piece.class.new(target_location, piece.colour)
+
+    @game_board[end_x][end_y] = piece.class.new([end_x, end_y], piece.colour)
     @game_board[start_x][start_y] = nil
 
     moved_piece = @game_board[end_x][end_y]
@@ -74,6 +74,16 @@ attr_reader :game_board
     end
 
     turn_off_enpassant(piece.colour) #once a move has been made, disallow enpassant on enemy pawns.
+  end
+
+  def piece_is_players_piece?(location, colour)
+    return false if !location.all? {|coord| coord.between?(0,7)}
+    piece = @game_board[location[0]][location[1]]
+    if (piece != nil) && (piece.colour == colour)
+      return true
+    else
+      return false
+    end
   end
 
   #check if piece exists on starting sq. check if piece can move to target sq.
@@ -327,10 +337,10 @@ attr_reader :game_board
       end
       empty_sq?(target_sq)
     else # pawn does not move straight, needs to be enemy piece diagonally in front
-      if enemy_at_square?(pawn.colour, target_sq)
+      if enemy_at_sq?(pawn.colour, target_sq)
         return true
       else
-        valid_enpassant_move?(pawn.colour, pawn.target_sq[0], end_y)
+        valid_enpassant_move?(pawn.colour, pawn.location[0], end_y)
       end
     end
   end
@@ -367,16 +377,13 @@ attr_reader :game_board
   #if not, enpassant is invalid. you arent required to make enpassant move.
   def enpassant_possible?(pawn, start_x)
     #it has to be just after a 2 step move was made my a pawn
-    if pawn.already_moved == true || (pawn.location[0] - start_x).abs != 2
-      return false
-    end
+    return false if pawn.already_moved == true || (pawn.location[0] - start_x).abs != 2
+
     #check squares left and right of the potentially captured pawn
-    [pawn.location[1] + 1, pawn.location[1] - 1].any? { |y|
+    [pawn.location[1] - 1, pawn.location[1] + 1].any? { |y|
       return false unless y.between?(0,7) # make sure it's on the board
       potential_attacker = @game_board[pawn.location[0]][y]
-      if potential_attacker.class == Pawn && potential_attacker.colour != pawn.colour
-        return true
-      end
+      potential_attacker.class == Pawn && potential_attacker.colour != pawn.colour
     }
   end
 
@@ -387,7 +394,7 @@ attr_reader :game_board
 
   def valid_enpassant_move?(colour, start_x, end_y)
     potential_pawn = @game_board[start_x][end_y]
-    return true if potential_pawn.class == Pawn && potential_pawn.colour != colour && potential_pawn.allow_for_enpassant == true
+    potential_pawn.class == Pawn && potential_pawn.colour != colour && potential_pawn.allow_for_enpassant == true
   end
 
 end
