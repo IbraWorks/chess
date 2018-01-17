@@ -7,7 +7,7 @@ class Queen < Piece
   def initialize(location, colour)
     super
     @moves = get_poss_moves
-    @colour == "white" ? @icon = "\U+2655" : @icon = "\U+265B"
+    @colour == "white" ? @icon = "♛" : @icon = "♕"
 
   end
 
@@ -25,7 +25,7 @@ class Queen < Piece
 
     verticals = vertical_moves(x,y)
     verticals.each { |move| move_list << move }
-    
+
     horizontals = horizontal_moves(x,y)
     horizontals.each { |move| move_list << move }
 

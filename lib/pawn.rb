@@ -7,7 +7,7 @@ class Pawn < Piece
   def initialize(location, colour)
     super
     @moves = get_poss_moves
-    @colour == "white" ? @icon = "\U+2659" : @icon = "\U+265F"
+    @colour == "white" ? @icon = "♟" : @icon = "♙"
     @already_moved = false
     @allow_for_enpassant = false
     @promotion_allowed = false

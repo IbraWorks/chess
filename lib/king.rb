@@ -6,7 +6,7 @@ class King < Piece
 
   def initialize(location, colour)
     super
-    @colour == "white" ? @icon = "\U+2654" : "\U+265A"
+    @colour == "white" ? @icon = "♚" : @icon = "♔"
     @moves = get_poss_moves
   end
 

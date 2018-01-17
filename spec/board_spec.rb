@@ -496,10 +496,22 @@ describe Board do
       end
     end
 
+    context "given black king at [4,7], white rook at [0,7] and white king at [4,5]" do
+      it "returns true" do
+        board.instance_variable_set(:@game_board, board.game_board.map do |row|
+            row.map { |square| nil }
+        end)
+        board.game_board[4][7] = King.new([4,7], "black")
+        board.game_board[0][7] = Rook.new([0,7], "white")
+        board.game_board[4][5] = King.new([4,5], "white")
+        expect(board.check_mate?("black")).to eql(true)
+      end
+    end
+
   end
 
 
-=begin
+
   describe "#check_mate?" do
 
     let(:board){Board.new}
@@ -553,13 +565,38 @@ describe Board do
       end
     end
 
+    context "the final test" do
+      it "returns true" do
+       board.instance_variable_set(:@game_board, board.game_board.map do |row|
+             row.map { |square| nil }
+       end)
+       board.game_board[4][7] = King.new([4,7], "black")
+       board.game_board[0][7] = Rook.new([0,7], "white")
+       board.game_board[4][5] = King.new([4,5], "white")
+       expect(board.check_mate?("black")).to eql(true)
+      end
+    end
+
   end
-=end
+
 
   describe "#can_king_escape?" do
     let(:board){Board.new}
 
-    context " given white king at [7,7] checked and mated by black rooks at [7,0] and [6,0]" do
+    context "" do
+      it "returns false" do
+         board.instance_variable_set(:@game_board, board.game_board.map do |row|
+              row.map { |square| nil }
+         end)
+        board.game_board[4][7] = King.new([4,7], "black")
+        board.game_board[0][7] = Rook.new([0,7], "white")
+        board.game_board[4][5] = King.new([4,5], "white")
+        king = board.locate_king("black")
+        expect(board.can_king_escape?(king.location, king.colour)).to eql(false)
+      end
+    end
+
+   context " given white king at [7,7] checked and mated by black rooks at [7,0] and [6,0]" do
       it "returns false" do
         board.instance_variable_set(:@game_board, board.game_board.map do |row|
             row.map { |square| nil }
@@ -568,9 +605,11 @@ describe Board do
         board.game_board[7][1] = Rook.new([7,1], "black")
         board.game_board[6][0] = Rook.new([6,0], "black")
         king = board.locate_king("white")
-        expect(board.can_king_escape?(king, "white")).to eql(false)
+        expect(board.can_king_escape?(king.location, "white")).to eql(false)
       end
     end
+
+
 
   end
 

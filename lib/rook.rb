@@ -7,7 +7,7 @@ class Rook < Piece
   def initialize(location, colour)
     super
     @moves = get_poss_moves
-    @colour == "white" ? @icon = "\U+2656" : @icon = "\U+265C"
+    @colour == "white" ? @icon = "♜" : @icon = "♖"
   end
 
   #rook moves straight vertically or horizontally, how many times it wants

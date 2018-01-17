@@ -7,7 +7,7 @@ class Bishop < Piece
   def initialize(location, colour)
     super
     @moves = get_poss_moves
-    @colour == "white" ? @icon = "\U+2657" : @icon = "\U+265D"
+    @colour == "white" ? @icon = "♝" : @icon = "♗"
   end
 
   #bishop moves diagonally, how many times it wants

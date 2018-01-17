@@ -5,7 +5,7 @@ describe Knight do
 
   context "when initialized as 'black'" do
     it "returns \U+265E as icon " do
-      expect(knight.icon).to eql("\U+265E")
+      expect(knight.icon).to eql("♘")
     end
   end
 
@@ -16,7 +16,7 @@ describe Knight do
         expect(knight.get_poss_moves).to eql([[2,0], [2,2], [1,3]])
       end
     end
-    
+
   end
 
 

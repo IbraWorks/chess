@@ -1,12 +1,3 @@
-require_relative "bishop.rb"
-require_relative "game.rb"
-require_relative "king.rb"
-require_relative "knight.rb"
-require_relative "pawn.rb"
-require_relative "piece.rb"
-require_relative "queen.rb"
-require_relative "rook.rb"
-
 class Board
 attr_reader :game_board
 
@@ -40,24 +31,58 @@ attr_reader :game_board
     0.upto(7) {|y| @game_board[2][y] = nil}
   end
 
+
   def display_board
-    print "  "
-    8.times.each{ print "+----"}
-    puts "+"
-    @game_board.each_index do |row|
-      print "#{row} "
-      @game_board[row].each_index do |column|
-        print "| #{@game_board[row][column]}  "
-      end
-      puts "|"
-      print "  "
-      8.times.each {print "+----"}
-      puts "+"
-    end
-    print "  "
-    (0..7).each {|e| print "  #{e}  "}
-    puts ""
+    clear
+    display_top_border
+    display_rows
+    display_bottom_border
+    display_x_axis
   end
+
+  def clear
+    system 'clear'
+    system 'cls'
+  end
+
+  def display_top_border
+    puts '   ┌────┬────┬────┬────┬────┬────┬────┬────┐'
+  end
+
+  def display_rows
+    (1..7).each do |row_number|
+      display_row(row_number)
+      display_separator
+    end
+    display_row(8)
+  end
+
+  def display_row(number)
+    square = number.even? ? 0 : 1
+    print "#{number-1}  "
+    @game_board[number-1].each do |position|
+      if position.nil?
+        print square.even? ? '│    ' : "│#{'    '}"
+      else
+        print square.even? ? "│ #{position.icon}  " : "│#{" #{position.icon}  "}"
+      end
+      square += 1
+    end
+    puts '│'
+  end
+
+  def display_separator
+    puts '   ├────┼────┼────┼────┼────┼────┼────┼────┤'
+  end
+
+  def display_bottom_border
+    puts '   └────┴────┴────┴────┴────┴────┴────┴────┘'
+  end
+
+  def display_x_axis
+    puts "     1    2    3    4    5    6    7    8  \n\n"
+  end
+
 
   #take the starting and ending coord, and instantiate a new object on the
   #ending coord using the instance variables from the starting one.
@@ -235,7 +260,7 @@ attr_reader :game_board
     #puts "check: #{check?(king.location, king_colour)}"
     return false if !check?(king.location, king_colour)
     #puts "can kin es: #{can_king_escape?(king, king_colour)}"
-    return false if can_king_escape?(king, king_colour)
+    return false if can_king_escape?(king.location, king_colour)
 
     attacking_pieces = pieces_can_kill_king(king.location, king_colour)
     if attacking_pieces.length == 1
@@ -252,19 +277,21 @@ attr_reader :game_board
 
   #find king's valid moves, get the ones that lead to no enemy piece being
   #able to attack the king. if there arent any, return false.
-  def can_king_escape?(king, king_colour)
-    king_valid_moves = king.moves.select { |move|
-      valid_move?(king.location[0],king.location[1], move[0], move[1])
-      #puts "king valid moves: #{king_valid_moves}"
+  def can_king_escape?(king_pos, king_colour)
+    valid_moves = all_valid_moves(king_pos, locate_king(king_colour).moves)
+    current = Marshal.load(Marshal.dump(@game_board))
+    valid_moves.each { |move|
+      @game_board[king_pos[0]][king_pos[1]] = nil
+      @game_board[move[0]][move[1]] = King.new(move, king_colour)
+
+      if check?(move, king_colour)
+        @game_board = current
+      else
+        @game_board = current
+        return true
+      end
     }
-
-
-    escaping_moves = king_valid_moves.select { |move|
-      pieces_can_kill_king(move, king_colour).empty?
-
-    }
-    #puts "escaping moves: #{escaping_moves}"
-    escaping_moves.empty? ? false : true
+    false
   end
 
   def friendly_pieces(king_colour)
@@ -276,20 +303,21 @@ attr_reader :game_board
   end
 
   def can_attack_be_blocked?(king_pos, king_colour)
-    friendlies = friendly_pieces(king_colour)
+    friendlies = friendly_pieces(king_colour).select { |piece| piece.class != King }
     #cycle through each friendly piece's moves and see if any move would lead
     #to king being out of check
     friendlies.each do |friendly|
       #copy the game_board before you make a test move
-      current_board = Marshal.load(Marshal.dump(@game_board))
+
       valid_moves = all_valid_moves(friendly.location, friendly.moves)
-      puts "valid_moves : #{valid_moves}"
+      #puts "valid_moves : #{valid_moves}"
       valid_moves.each do |move|
+        current_board = Marshal.load(Marshal.dump(@game_board))
         @game_board[friendly.location[0]][friendly.location[1]] = nil
-        puts "king's previous position before move: #{@game_board[friendly.location[0]][friendly.location[1]]}" #should be nil
+        #puts "king's previous position before move: #{@game_board[friendly.location[0]][friendly.location[1]]}" #should be nil
         @game_board[move[0]][move[1]] = friendly.class.new(move, king_colour)
-        puts "kings new position: #{@game_board[move[0]][move[1]].location}"
-        puts "check?: #{check?(king_pos, king_colour)}, move: #{move}"
+        #puts "kings new position: #{@game_board[move[0]][move[1]].location}"
+        #puts "check?: #{check?(king_pos, king_colour)}, move: #{move}"
         if !check?(king_pos, king_colour)
           @game_board = current_board # reset game_board to it's state before the test moves
           return true

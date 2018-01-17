@@ -5,7 +5,7 @@ class Knight < Piece
   def initialize(location, colour)
     super
     @moves = get_poss_moves
-    @colour == "white" ? @icon = "\U+2658" : @icon = "\U+265E"
+    @colour == "white" ? @icon = "♞" : @icon = "♘"
   end
 
   def get_poss_moves
