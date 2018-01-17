@@ -297,7 +297,7 @@ describe Board do
       end
     end
 
-    context "given black pawn tries same move above ([4,6] to [5,5] capturing white pawn at [4,5]) but before capturing via en passant plays another move" do
+    context "given black pawn ([4,6] to [5,5] capturing white pawn at [4,5]) but before capturing via en passant plays another move" do
       it "returns false" do
         board.move_piece(1,6,3,6)
         board.move_piece(3,6,4,6)
@@ -314,6 +314,23 @@ describe Board do
         board.move_piece(6,5,5,5)
         board.move_piece(5,5,4,5)
         expect(board.valid_move?(4,6,5,5)).to eql(false)
+      end
+    end
+
+    context "given white pawn moves from [6,7] to [4,7] to capture a piece" do
+      it "returns false" do
+        board.game_board[4][7] = Queen.new([4,7], "black")
+        expect(board.valid_move?(6,7,4,7)).to eql(false)
+      end
+    end
+
+    context "after a few moves, white pawn tries to take first move [6,0][4,0] to capture enemy piece" do
+      it "returns false" do
+        board.move_piece(6,5,5,5)
+        board.move_piece(1,4,3,4)
+        board.move_piece(6,6,4,6)
+        board.move_piece(0,3,4,7)
+        expect(board.valid_move?(6,7,4,7)).to eql(false)
       end
     end
 
@@ -408,40 +425,7 @@ describe Board do
 
 
   end
-
-  describe "#move_checks_own_king?" do
-    let(:board){Board.new}
-
-    context "when black rook moves and leaves king in a vulnerable position" do
-      it "returns true" do
-        board.game_board[1][4] = nil
-        board.game_board[2][4] = Rook.new([2,4], "black")
-        board.game_board[4][4] = Queen.new([4,4], "white")
-        expect(board.move_checks_own_king?(2,4,2,5,"black")).to eql(true)
-      end
-    end
-
-    context "black king at [2,0] with black rook at [3,1] moving to clear path for white bishop at [4,2]" do
-      it "returns true" do
-        board.game_board[0][4] = nil
-        board.game_board[2][0] = King.new([2,0], "black")
-        board.game_board[3][1] = Rook.new([3,1], "black")
-        board.game_board[4][2] = Bishop.new([4,2], "white")
-        expect(board.move_checks_own_king?(3,1,2,1,"black")).to eql(true)
-      end
-    end
-
-    context "black king at [3,0] with black rook at [3,1] moving to [2,1] but move does not result in check from white bishop at [4,2]" do
-      it "returns false" do
-        board.game_board[0][4] = nil
-        board.game_board[3][0] = King.new([3,0], "black")
-        board.game_board[3][1] = Rook.new([3,1], "black")
-        board.game_board[4][2] = Bishop.new([4,2], "white")
-        expect(board.move_checks_own_king?(3,1,2,1,"black")).to eql(false)
-      end
-    end
-
-  end
+=begin
 
   describe "#can_player_avoid_stalemate?" do
     let(:board){Board.new}
@@ -460,7 +444,7 @@ describe Board do
     end
 
     context "given black king at [0,0] with white rook at [1,1] and white king at [2,2]" do
-      it "returns true" do
+      it "returns false" do
         board.instance_variable_set(:@game_board, board.game_board.map do |row|
             row.map { |square| nil }
         end)
@@ -472,7 +456,7 @@ describe Board do
     end
 
     context "black king at [7,0], black bishop at [7,1], white rook at [7,7], white king at[5,1]" do
-      it "returns true" do
+      it "returns false" do
         board.instance_variable_set(:@game_board, board.game_board.map do |row|
             row.map { |square| nil }
         end)
@@ -480,7 +464,7 @@ describe Board do
         board.game_board[7][1] = Bishop.new([7,1], "black")
         board.game_board[7][7] = Rook.new([7,7], "white")
         board.game_board[5][1] = King.new([5,1], "white")
-        expect(board.can_player_avoid_stalemate?("black")).to eql(false)
+        expect(board.can_player_avoid_stalemate?("white")).to eql(true)
       end
     end
 
@@ -496,166 +480,92 @@ describe Board do
       end
     end
 
-    context "given black king at [4,7], white rook at [0,7] and white king at [4,5]" do
-      it "returns true" do
-        board.instance_variable_set(:@game_board, board.game_board.map do |row|
-            row.map { |square| nil }
-        end)
-        board.game_board[4][7] = King.new([4,7], "black")
-        board.game_board[0][7] = Rook.new([0,7], "white")
-        board.game_board[4][5] = King.new([4,5], "white")
-        expect(board.check_mate?("black")).to eql(true)
-      end
-    end
+  #  context "given black king at [4,7], white rook at [0,7] and white king at [4,5]" do
+  #    it "returns true" do
+  #      board.instance_variable_set(:@game_board, board.game_board.map do |row|
+  #          row.map { |square| nil }
+  #      end)
+  #      board.game_board[4][7] = King.new([4,7], "black")
+  #      board.game_board[0][7] = Rook.new([0,7], "white")
+  #      board.game_board[4][5] = King.new([4,5], "white")
+  #      expect(board.check_mate?("black")).to eql(true)
+  #    end
+  #  end
 
   end
 
-
+=end
 
   describe "#check_mate?" do
 
     let(:board){Board.new}
 
-    context "given a black king on starting board" do
-      it "returns false" do
-        king_location = board.locate_king("black").location
-        expect(board.check_mate?("black")).to eql(false)
-      end
-    end
+  #  context "given a black king on starting board" do
+  #    it "returns false" do
+  #      king_location = board.locate_king("black").location
+  #      expect(board.check_mate?("black")).to eql(false)
+  #    end
+  #  end
 
-    context "given black king in check can move out of check" do
-      it "returns false" do
-        board.game_board[1][4] = nil #get rid of blocking pawn
-        board.game_board[4][4] = Queen.new([4,4], "white") # attacking queen
-        board.game_board[1][3] = nil #get rid of pawn so king can move out of check
-        expect(board.check_mate?("black")).to eql(false)
-      end
-    end
+  #  context "given black king in check can move out of check" do
+  #    it "returns false" do
+  #      board.game_board[1][4] = nil #get rid of blocking pawn
+  #      board.game_board[4][4] = Queen.new([4,4], "white") # attacking queen
+  #      board.game_board[1][3] = nil #get rid of pawn so king can move out of check
+    #    expect(board.check_mate?("black")).to eql(false)
+    #  end
+    #end
 
-    context "given a black king at [0,4] in check by white knight at [2,5] with no black knight" do
+    context "given fools mate (fastest checkmate) for black" do
       it "returns true" do
-        board.game_board[0][6] = nil #erase knight that can save king
-        board.game_board[1][4] = Knight.new([1,4], "black") #just to test
-        board.game_board[1][6] = nil # erase pawn that can save king
-        board.game_board[2][5] = Knight.new([2,5], "white") #attacking knight
-        expect(board.check_mate?("black")).to eql(true)
-      end
-    end
-
-    context "given black king in check with a friendly piece that can block the attack" do
-      it "returns false" do
-        board.game_board[1][4] = nil
-        board.game_board[4][4] = Rook.new([4,4], "white")
-        board.game_board[2][3] = Bishop.new([2,3], "black") #piece that will block attack
-        expect(board.check_mate?("black")).to eql(false)
-      end
-    end
-
-
-    context "given white king at [7,7] checked and mated by black rooks at [7,0] and [6,0]" do
-      it "returns true" do
-        board.instance_variable_set(:@game_board, board.game_board.map do |row|
-            row.map { |square| nil }
-        end)
-        board.game_board[7][7] = King.new([7,7], "white")
-        board.game_board[7][1] = Rook.new([7,1], "black")
-        board.game_board[6][0] = Rook.new([6,0], "black")
-
+        board.move_piece(6,5,5,5)
+        board.move_piece(1,4,3,4)
+        board.move_piece(6,6,4,6)
+        board.move_piece(0,3,4,7)
+        board.display_board
         expect(board.check_mate?("white")).to eql(true)
       end
     end
 
-    context "the final test" do
-      it "returns true" do
-       board.instance_variable_set(:@game_board, board.game_board.map do |row|
-             row.map { |square| nil }
-       end)
-       board.game_board[4][7] = King.new([4,7], "black")
-       board.game_board[0][7] = Rook.new([0,7], "white")
-       board.game_board[4][5] = King.new([4,5], "white")
-       expect(board.check_mate?("black")).to eql(true)
-      end
-    end
+  #  context "given black king in check with a friendly piece that can block the attack" do
+  #    it "returns false" do
+  #      board.game_board[1][4] = nil
+  #      board.game_board[4][4] = Rook.new([4,4], "white")
+  #      board.game_board[2][3] = Bishop.new([2,3], "black") #piece that will block attack
+  #      expect(board.check_mate?("black")).to eql(false)
+  #    end
+  #  end
+
+
+  #  context "given white king at [7,7] checked and mated by black rooks at [7,0] and [6,0]" do
+  #    it "returns true" do
+  #      board.instance_variable_set(:@game_board, board.game_board.map do |row|
+  #          row.map { |square| nil }
+  #      end)
+  #      board.game_board[7][7] = King.new([7,7], "white")
+  #      board.game_board[7][1] = Rook.new([7,1], "black")
+  #      board.game_board[6][0] = Rook.new([6,0], "black")
+
+  #      expect(board.check_mate?("white")).to eql(true)
+  #    end
+  #  end
+
+  #  context "the final test" do
+  #    it "returns true" do
+  #     board.instance_variable_set(:@game_board, board.game_board.map do |row|
+  #           row.map { |square| nil }
+  #     end)
+  #     board.game_board[4][7] = King.new([4,7], "black")
+  #     board.game_board[0][7] = Rook.new([0,7], "white")
+  #     board.game_board[4][5] = King.new([4,5], "white")
+  #     expect(board.check_mate?("black")).to eql(true)
+  #    end
+  #  end
 
   end
 
 
-  describe "#can_king_escape?" do
-    let(:board){Board.new}
-
-    context "" do
-      it "returns false" do
-         board.instance_variable_set(:@game_board, board.game_board.map do |row|
-              row.map { |square| nil }
-         end)
-        board.game_board[4][7] = King.new([4,7], "black")
-        board.game_board[0][7] = Rook.new([0,7], "white")
-        board.game_board[4][5] = King.new([4,5], "white")
-        king = board.locate_king("black")
-        expect(board.can_king_escape?(king.location, king.colour)).to eql(false)
-      end
-    end
-
-   context " given white king at [7,7] checked and mated by black rooks at [7,0] and [6,0]" do
-      it "returns false" do
-        board.instance_variable_set(:@game_board, board.game_board.map do |row|
-            row.map { |square| nil }
-        end)
-        board.game_board[7][7] = King.new([7,7], "white")
-        board.game_board[7][1] = Rook.new([7,1], "black")
-        board.game_board[6][0] = Rook.new([6,0], "black")
-        king = board.locate_king("white")
-        expect(board.can_king_escape?(king.location, "white")).to eql(false)
-      end
-    end
 
 
-
-  end
-
-
-  describe "#can_attack_be_blocked?" do
-    let(:board){Board.new}
-
-    context "given white king at [7,7] checked and mated by black rooks at [7,0] and [6,0] with nothing else on board" do
-      it "returns false" do
-        board.instance_variable_set(:@game_board, board.game_board.map do |row|
-            row.map { |square| nil }
-        end)
-        board.game_board[7][7] = King.new([7,7], "white")
-        board.game_board[7][1] = Rook.new([7,1], "black")
-        board.game_board[6][0] = Rook.new([6,0], "black")
-        king = board.locate_king("white")
-        expect(board.can_attack_be_blocked?(king.location, king.colour)).to eql(false)
-      end
-    end
-
-    context " " do
-      it "returns true" do
-        board.instance_variable_set(:@game_board, board.game_board.map do |row|
-            row.map { |square| nil }
-        end)
-        board.game_board[7][6] = King.new([7,6],"black")
-        board.game_board[7][1] = Rook.new([7,1], "white")
-        board.game_board[6][0] = Rook.new([6,0], "white")
-        king = board.locate_king("black")
-        expect(board.check?(king.location, king.colour)).to eql(true)
-      end
-    end
-
-    context " " do
-      it "returns true" do
-        board.instance_variable_set(:@game_board, board.game_board.map do |row|
-            row.map { |square| nil }
-        end)
-        board.game_board[6][6] = King.new([7,6],"black")
-        board.game_board[7][1] = Rook.new([7,1], "white")
-        board.game_board[6][0] = Rook.new([6,0], "white")
-        king = board.locate_king("black")
-        expect(board.check?(king.location, king.colour)).to eql(true)
-      end
-    end
-
-  end
 
 end

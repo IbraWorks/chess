@@ -71,6 +71,16 @@ attr_reader :game_board
     puts '│'
   end
 
+  def piece_is_players_piece?(location, colour)
+    return false if !location.all? {|coord| coord.between?(0,7)}
+    piece = @game_board[location[0]][location[1]]
+    if (piece != nil) && (piece.colour == colour)
+      return true
+    else
+      return false
+    end
+  end
+
   def display_separator
     puts '   ├────┼────┼────┼────┼────┼────┼────┼────┤'
   end
@@ -80,7 +90,7 @@ attr_reader :game_board
   end
 
   def display_x_axis
-    puts "     1    2    3    4    5    6    7    8  \n\n"
+    puts "     0    1    2    3    4    5    6    7  \n\n"
   end
 
 
@@ -101,15 +111,7 @@ attr_reader :game_board
     turn_off_enpassant(piece.colour) #once a move has been made, disallow enpassant on enemy pawns.
   end
 
-  def piece_is_players_piece?(location, colour)
-    return false if !location.all? {|coord| coord.between?(0,7)}
-    piece = @game_board[location[0]][location[1]]
-    if (piece != nil) && (piece.colour == colour)
-      return true
-    else
-      return false
-    end
-  end
+
 
   #check if piece exists on starting sq. check if piece can move to target sq.
   #check if target sq is empty or has enemy piece
@@ -119,6 +121,7 @@ attr_reader :game_board
     return false if start_y > 7 || start_y < 0
     return false if end_x > 7 || end_x < 0
     return false if end_y > 7 || end_y < 0
+
     piece = @game_board[start_x][start_y]
     return false if piece == nil
 
@@ -129,107 +132,86 @@ attr_reader :game_board
 
     return false unless empty_sq?(target_sq) || enemy_at_sq?(piece.colour, target_sq)
 
-    unless piece.class == King || piece.class == Knight
+    unless piece.class == Knight || piece.class == King
       return no_pieces_in_between?(start_x, start_y, end_x, end_y)
     end
 
     true
   end
 
-  def move_checks_own_king?(start_x, start_y, end_x, end_y, colour)
-    current_board = Marshal.load(Marshal.dump(@game_board))
-
-    move_piece(start_x, start_y, end_x, end_y)
-
-    king = locate_king(colour)
-
-    if check?(king.location, king.colour)
-      @game_board = current_board
-      return true
-    else
-      @game_board = current_board
-      return false
-    end
-  end
-
-  def can_player_avoid_stalemate?(colour)
-    potential_moves = []
-    friendlies = friendly_pieces(colour)
-
-    friendlies.each do |friendly|
-      valid_moves = all_valid_moves(friendly.location, friendly.moves)
-      valid_moves.each do |move|
-        if !move_checks_own_king?(friendly.location[0], friendly.location[1], move[0], move[1], colour)
-          potential_moves << move
-        end
-      end
-    end
-    potential_moves.empty? ? false : true
-  end
-
-  def no_pieces_in_between?(start_x, start_y, end_x, end_y)
-    if start_x == end_x
-      starting_column = start_y < end_y ? start_y : end_y
-      ending_column = starting_column == start_y ? end_y : start_y
-      starting_column += 1
-      until starting_column == ending_column
-        return false unless @game_board[start_x][starting_column] == nil
-        starting_column += 1
+  def no_pieces_in_between?(from_row, from_column, to_row, to_column)
+    if from_row == to_row
+      column = from_column < to_column ? from_column : to_column
+      ending_column = column == from_column ? to_column : from_column
+      column += 1
+      until column == ending_column
+        return false unless @game_board[from_row][column] == nil
+        column += 1
       end
       true
-    elsif start_y == end_y
-      starting_row = start_x < end_x ? start_x : end_x
-      ending_row = starting_row == start_x ? end_x : start_x
-      starting_row += 1
-      until starting_row == ending_row
-        return false unless @game_board[starting_row][start_y] == nil
-        starting_row += 1
+    elsif from_column == to_column
+      row = from_row < to_row ? from_row : to_row
+      ending_row = row == from_row ? to_row : from_row
+      row += 1
+      until row == ending_row
+        return false unless @game_board[row][from_column] == nil
+        row += 1
       end
       true
     else
-      no_pieces_in_between_diagonal?(start_x, start_y, end_x, end_y)
+      no_pieces_in_between_diagonal?(from_row, from_column, to_row, to_column)
     end
   end
 
   # Given two points on the board that form a diagonal, returns true
   # if there are no pieces in between and false otherwise
-  def no_pieces_in_between_diagonal?(start_x, start_y, end_x, end_y)
-    row = start_x
-    column = start_y
-    if end_x > start_x && end_y > start_y
+  def no_pieces_in_between_diagonal?(from_row, from_column, to_row, to_column)
+    row = from_row
+    column = from_column
+    if to_row > from_row && to_column > from_column
       row += 1
       column += 1
-      until row == end_x
+      until row == to_row
         return false unless @game_board[row][column] == nil
         row += 1
         column += 1
       end
-    elsif end_x > start_x && end_y <= start_y
+    elsif to_row > from_row && to_column <= from_column
       row += 1
       column -= 1
-      until row == end_x
+      until row == to_row
         return false unless @game_board[row][column] == nil
         row += 1
         column -= 1
       end
-    elsif end_x <= start_x && end_y <= start_y
+    elsif to_row <= from_row && to_column <= from_column
       row -= 1
       column -= 1
-      until row == end_x
+      until row == to_row
         return false unless @game_board[row][column] == nil
         row -= 1
         column -= 1
       end
-    elsif end_x <= start_x && end_y > start_y
+    elsif to_row <= from_row && to_column > from_column
       row -= 1
       column += 1
-      until row == end_x
+      until row == to_row
         return false unless @game_board[row][column] == nil
         row -= 1
         column += 1
       end
     end
     true
+  end
+
+  def all_valid_moves(location, moves)
+    moves.select { |move| valid_move?(location[0], location[1], move[0], move[1]) }
+  end
+
+  def all_pieces_on_board
+    pieces = @game_board.map { |row|
+      row.select { |square| square != nil  }
+     }.flatten #place all pieces in a one dimensional array
   end
 
   def locate_king(colour)
@@ -250,120 +232,60 @@ attr_reader :game_board
     all_pieces_on_board.select { |piece| piece.colour != king_colour }
   end
 
+  def friendly_pieces(king_colour)
+    all_pieces_on_board.select { |piece| piece.colour == king_colour }
+  end
+
   def check?(king_pos, king_colour)
-    pieces_can_kill_king(king_pos, king_colour).empty? ? false : true
+    !pieces_can_kill_king(king_pos, king_colour).empty?
   end
 
   def check_mate?(king_colour)
     #find king piece
     king = locate_king(king_colour)
     #puts "check: #{check?(king.location, king_colour)}"
-    return false if !check?(king.location, king_colour)
-    #puts "can kin es: #{can_king_escape?(king, king_colour)}"
-    return false if can_king_escape?(king.location, king_colour)
+    return false unless check?(king.location, king.colour)
 
-    attacking_pieces = pieces_can_kill_king(king.location, king_colour)
-    if attacking_pieces.length == 1
-      #puts "can att be cap: #{can_attackers_be_captured?(attacking_pieces[0], king_colour)}"
-      return false if can_attackers_be_captured?(attacking_pieces[0], king_colour)
-      if attacking_pieces[0].class == Rook || attacking_pieces[0].class == Bishop || attacking_pieces[0].class == Queen
-        #puts "can att be blocked: #{can_attack_be_blocked?(king.location, king_colour)}"
-        return false if can_attack_be_blocked?(king.location, king_colour)
-      end
-    end
-
-    true
-  end
-
-  #find king's valid moves, get the ones that lead to no enemy piece being
-  #able to attack the king. if there arent any, return false.
-  def can_king_escape?(king_pos, king_colour)
-    valid_moves = all_valid_moves(king_pos, locate_king(king_colour).moves)
-    current = Marshal.load(Marshal.dump(@game_board))
-    valid_moves.each { |move|
-      @game_board[king_pos[0]][king_pos[1]] = nil
-      @game_board[move[0]][move[1]] = King.new(move, king_colour)
-
-      if check?(move, king_colour)
-        @game_board = current
-      else
-        @game_board = current
-        return true
-      end
-    }
-    false
-  end
-
-  def friendly_pieces(king_colour)
-    all_pieces_on_board.select { |piece| piece.colour == king_colour }
-  end
-
-  def all_valid_moves(location, moves)
-    moves.select { |move| valid_move?(location[0], location[1], move[0], move[1]) }
-  end
-
-  def can_attack_be_blocked?(king_pos, king_colour)
-    friendlies = friendly_pieces(king_colour).select { |piece| piece.class != King }
-    #cycle through each friendly piece's moves and see if any move would lead
-    #to king being out of check
-    friendlies.each do |friendly|
-      #copy the game_board before you make a test move
-
-      valid_moves = all_valid_moves(friendly.location, friendly.moves)
-      #puts "valid_moves : #{valid_moves}"
-      valid_moves.each do |move|
-        current_board = Marshal.load(Marshal.dump(@game_board))
-        @game_board[friendly.location[0]][friendly.location[1]] = nil
-        #puts "king's previous position before move: #{@game_board[friendly.location[0]][friendly.location[1]]}" #should be nil
-        @game_board[move[0]][move[1]] = friendly.class.new(move, king_colour)
-        #puts "kings new position: #{@game_board[move[0]][move[1]].location}"
-        #puts "check?: #{check?(king_pos, king_colour)}, move: #{move}"
-        if !check?(king_pos, king_colour)
-          @game_board = current_board # reset game_board to it's state before the test moves
-          return true
-        else
-          @game_board = current_board # reset game_board to it's state before the test moves
-        end
-      end
-    end
-    false
-  end
-
-  def can_attackers_be_captured?(attacker, king_colour)
-    friendlies = all_pieces_on_board.select {|piece| piece.colour == king_colour}
-    friendlies.any? do |piece|
-      return false if piece.class == King
-      valid_moves = piece.moves.select { |move|
-        valid_move?(piece.location[0], piece.location[1], move[0], move[1])
+    friendlies = friendly_pieces(king.colour)
+    friendlies.all? { |friendly|
+      all_valid_moves(friendly.location, friendly.moves).all? { |move|
+        still_in_check_after_move?(friendly, move, friendly.colour)
       }
-      valid_moves.include? (attacker.location)
+    }
+  end
+
+  def still_in_check_after_move?(piece, move, colour)
+    current_board = Marshal.load(Marshal.dump(@game_board))
+    @game_board[piece.location[0]][piece.location[1]] = nil
+    @game_board[move[0]][move[1]] = piece.class.new(move, colour)
+
+    still_check = check?(move, colour)
+    @game_board = current_board
+    puts "\npiece: #{piece.class}; loc: #{piece.location}; col: #{piece.colour}; move: #{move}; stillcheck: #{still_check}"
+    still_check
+  end
+
+  def can_player_avoid_stalemate?(colour)
+    potential_moves = []
+    friendlies = friendly_pieces(colour)
+
+    friendlies.any? do |friendly|
+      valid_moves = all_valid_moves(friendly.location, friendly.moves)
+      valid_moves.any? do |move|
+        !still_in_check_after_move?(friendly, move, friendly.colour)
+      end
     end
+
   end
-
-  def all_pieces_on_board
-    pieces = @game_board.map { |row|
-      row.select { |square| square != nil  }
-     }
-    pieces = pieces.flatten #place all pieces in a one dimensional array
-  end
-
-
-
-  #go through each row and select square that != nil
-
 
   #returns true if sq is empty
   def empty_sq?(location)
-    x = location[0]
-    y = location[1]
-    return true if @game_board[x][y] == nil
+    return @game_board[location[0]][location[1]] == nil
   end
   #returns true if enemy piece is at a sq.
   def enemy_at_sq?(colour, location)
-    x = location[0]
-    y = location[1]
-    return false if @game_board[x][y] == nil
-    return true if @game_board[x][y].colour != colour
+    return false if @game_board[location[0]][location[1]] == nil
+    @game_board[location[0]][location[1]].colour != colour
   end
 
   def valid_pawn_move?(pawn, target_sq, end_y, start_y)
@@ -374,9 +296,9 @@ attr_reader :game_board
         return false if pawn.already_moved == true
       end
       empty_sq?(target_sq)
-    else # pawn does not move straight, needs to be enemy piece diagonally in front
+    else # if pawn not moving straight, needs to hit enemy piece unless its en_passant
       if enemy_at_sq?(pawn.colour, target_sq)
-        return true
+         true
       else
         valid_enpassant_move?(pawn.colour, pawn.location[0], end_y)
       end
@@ -427,7 +349,7 @@ attr_reader :game_board
 
   def promotion?(pawn)
     #pawn cant move backwards so no need to check for colour
-    return true if pawn.location[0] == 0 || pawn.location[0] == 7
+    pawn.location[0] == 0 || pawn.location[0] == 7
   end
 
   def valid_enpassant_move?(colour, start_x, end_y)

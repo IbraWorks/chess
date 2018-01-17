@@ -10,11 +10,12 @@ class Game
   def play
     puts "\n Welcome to chess. #{@player1.name} you're white, #{@player2.name} you're black"
 
-    until game_over? || stalemate?
-      play_turn
-    end
-
     @board.display_board
+
+    play_turn
+
+    puts "hope you had fun"
+    exit
   end
 
 
@@ -31,25 +32,29 @@ class Game
 
   def play_turn
 
-    puts "\n\n #{@active_player.name}, it's your turn. (#{@active_player.colour}'s turn).\n"
+    loop do
+      break if game_over?
+      break if stalemate?
 
-    @board.display_board
+      puts "\n\n #{@active_player.name}, it's your turn. (#{@active_player.colour}'s turn).\n"
+      @board.display_board
+      check_if_checked?
 
-    check_if_checked?
-
-    #select_which_piece
-    start_sq = get_starting_location
-    end_sq = get_ending_location
-
-    until (@board.valid_move?(start_sq[0], start_sq[1], end_sq[0], end_sq[1])) && @board.move_checks_own_king?(start_sq[0], start_sq[1], end_sq[0], end_sq[1], @active_player.colour) == false
-      puts "That's not a valid move. please try again \n"
+      #select_which_piece
       start_sq = get_starting_location
       end_sq = get_ending_location
+
+      until (@board.valid_move?(start_sq[0], start_sq[1], end_sq[0], end_sq[1])) && @board.check?(@board.locate_king(@active_player.colour).location, @active_player.colour) == false
+        puts "That's not a valid move. please try again \n"
+        @board.display_board
+        start_sq = get_starting_location
+        end_sq = get_ending_location
+      end
+
+      @board.move_piece(start_sq[0], start_sq[1], end_sq[0], end_sq[1])
+
+      @active_player = switch_players(@active_player)
     end
-
-    @board.move_piece(start_sq[0], start_sq[1], end_sq[0], end_sq[1])
-
-    @active_player = switch_players(@active_player)
   end
 
 
