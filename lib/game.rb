@@ -14,6 +14,7 @@ class Game
     @title.instructions
 
     @board.display_board
+    puts "\n\n\n\n\n\n"
 
     play_turn
 
@@ -34,6 +35,9 @@ class Game
     (@active_player == @player1) ? (@active_player = @player2) : (@active_player = @player1)
   end
 
+  def is_piece_yours?(location, colour)
+    @board.piece_is_players_piece?(location, colour)
+  end
 
   def play_turn
 
@@ -47,20 +51,29 @@ class Game
 
       #select_which_piece
       player_move = @active_player.get_move
+
       start_sq = player_move[0]
       end_sq = player_move[1]
 
-      if !@board.valid_move?(start_sq[0], start_sq[1], end_sq[0], end_sq[1]) && @board.check_own_king?(start_sq, end_sq, @active_player.colour) == false
+      if !@board.valid_move?(start_sq[0], start_sq[1], end_sq[0], end_sq[1]) || @board.check_own_king?(start_sq, end_sq, @active_player.colour) || !is_piece_yours?(start_sq, @active_player.colour)
         puts "That's not a valid move. please try again \n"
         redo
       end
 
       @board.move_piece(start_sq[0], start_sq[1], end_sq[0], end_sq[1])
 
-      #to do: check_for_pawn_promotion after
+      if @board.promotion?(@active_player.colour)
+        upgrade_string = @active_player.get_pawn_promotion
+        upgrade = string_to_class_name(upgrade_string)
+        @board.promote(upgrade, @active_player.colour)
+      end
 
       @active_player = switch_players(@active_player)
     end
+  end
+
+  def string_to_class_name(string)
+    Object.const_get(string)
   end
 
   def is_it_stalemate?

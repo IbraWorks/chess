@@ -10,7 +10,6 @@ class Pawn < Piece
     @colour == "white" ? @icon = "♟" : @icon = "♙"
     @already_moved = false
     @allow_for_enpassant = false
-    @promotion_allowed = false
   end
 
   #array with all moves pawn can make on empty board

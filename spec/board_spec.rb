@@ -142,15 +142,6 @@ describe Board do
       end
     end
 
-    context "given black pawn moves from [6,0] to [7,0]" do
-      it "changes the @promotion_allowed variable to true" do
-        board.game_board[6][0] = Pawn.new([6,0], "black")
-        expect(board.game_board[6][0].promotion_allowed).to eql(false)
-        board.move_piece(6,0,7,0)
-        expect(board.game_board[7][0].promotion_allowed).to eql(true)
-      end
-    end
-
   end
 
   describe "#piece_is_players_piece?" do

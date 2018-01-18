@@ -41,4 +41,21 @@ class Player
     player_move.length == 2 && player_move.each { |move| move.length == 2 && move.each { |e| (0..7).include?(e) } }
   end
 
+  def get_pawn_promotion
+    puts "\n#{@name}, you can upgrade your pawn"
+    puts "choose: Queen, Knight, Bishop or Rook"
+    upgrade = gets.chomp.capitalize
+    while !valid_pawn_promotion?(upgrade)
+      puts "\nPlease select from the following list:"
+      puts "Queen, Knight, Bishop or Rook"
+      upgrade = gets.chomp.upcase
+    end
+    upgrade
+  end
+
+  def valid_pawn_promotion?(input)
+    answers = ["Queen", "Knight", "Bishop", "Rook"]
+    answers.include?(input)
+  end
+
 end

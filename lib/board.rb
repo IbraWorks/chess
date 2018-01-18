@@ -352,10 +352,6 @@ attr_reader :game_board
       @game_board[start_x][end_y] = nil
     end
 
-    if promotion?(moved_piece)
-      moved_piece.promotion_allowed = true
-    end
-
     moved_piece.already_moved = true
   end
 
@@ -373,9 +369,21 @@ attr_reader :game_board
     }
   end
 
-  def promotion?(pawn)
-    #pawn cant move backwards so no need to check for colour
-    pawn.location[0] == 0 || pawn.location[0] == 7
+  def promotion?(colour)
+    row = colour == "white" ? 0 : 7
+    @game_board[row].any? { |e| e.class == Pawn  }
+  end
+
+  def promote(new_class, colour)
+    pawn_location = location_of_promoting_pawn(colour)
+    upgrade = new_class.new(pawn_location, colour)
+    create_piece(upgrade, pawn_location)
+  end
+
+  def location_of_promoting_pawn(colour)
+    row = colour == "white" ? 0 : 7
+    col = @game_board[row].index{|e| e.class == Pawn }
+    [row,col]
   end
 
   def valid_enpassant_move?(colour, start_x, end_y)
