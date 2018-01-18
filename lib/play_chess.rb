@@ -8,6 +8,7 @@ require_relative "./piece.rb"
 require_relative "./queen.rb"
 require_relative "./rook.rb"
 require_relative "./player.rb"
+require_relative "./title.rb"
 
 trial = Game.new()
 trial.play

@@ -33,7 +33,6 @@ attr_reader :game_board
 
 
   def display_board
-    clear
     display_top_border
     display_rows
     display_bottom_border
@@ -90,7 +89,7 @@ attr_reader :game_board
   end
 
   def display_x_axis
-    puts "     0    1    2    3    4    5    6    7  \n\n"
+    puts "     a    b    c    d    e    f    g    h  \n\n"
   end
 
 
@@ -224,6 +223,7 @@ attr_reader :game_board
   #then select those that have a valid_move to attack the king
   def pieces_can_kill_king(king_pos, king_colour)
     enemy_pieces(king_colour).select do |piece|
+
       valid_move?(piece.location[0], piece.location[1], king_pos[0], king_pos[1])
     end
   end
@@ -236,47 +236,73 @@ attr_reader :game_board
     all_pieces_on_board.select { |piece| piece.colour == king_colour }
   end
 
-  def check?(king_pos, king_colour)
-    !pieces_can_kill_king(king_pos, king_colour).empty?
+  def piece_under_attack?(location, colour)
+    enemy_pieces(colour).each { |att_piece|
+      return true if valid_move?(att_piece.location[0], att_piece.location[1], location[0], location[1])
+    }
+    false
   end
 
-  def check_mate?(king_colour)
-    #find king piece
-    king = locate_king(king_colour)
-    #puts "check: #{check?(king.location, king_colour)}"
-    return false unless check?(king.location, king.colour)
 
-    friendlies = friendly_pieces(king.colour)
+  def check?(king_pos, king_colour)
+    piece_under_attack?(king_pos, king_colour)
+  end
+
+  def other_colour(colour)
+    colour == "white" ? "black" : "white"
+  end
+
+  def check_own_king?(start_sq, target_sq, king_colour)
+    piece = @game_board[start_sq[0]][start_sq[1]]
+    target_piece = @game_board[target_sq[0]][target_sq[1]]
+    move_piece(start_sq[0],start_sq[1],target_sq[0],target_sq[1])
+    king = locate_king(piece.colour)
+    is_king_checked = piece_under_attack?(king.location, king_colour)
+    undo_move(start_sq, target_sq, piece, target_piece)
+    is_king_checked
+  end
+
+  def stalemate?(king_colour)
+    king = locate_king(king_colour)
+    return false if check?(king.location, king_colour)
+
+    friendlies = friendly_pieces(king_colour)
     friendlies.all? { |friendly|
       all_valid_moves(friendly.location, friendly.moves).all? { |move|
-        still_in_check_after_move?(friendly, move, friendly.colour)
+        check_own_king?(friendly.location, move, king_colour)
       }
     }
   end
 
-  def still_in_check_after_move?(piece, move, colour)
-    current_board = Marshal.load(Marshal.dump(@game_board))
-    @game_board[piece.location[0]][piece.location[1]] = nil
-    @game_board[move[0]][move[1]] = piece.class.new(move, colour)
+  def check_mate?(king_colour)
+    king = locate_king(king_colour)
 
-    still_check = check?(move, colour)
-    @game_board = current_board
-    puts "\npiece: #{piece.class}; loc: #{piece.location}; col: #{piece.colour}; move: #{move}; stillcheck: #{still_check}"
-    still_check
+    return false unless check?(king.location, king_colour)
+
+    friendlies = friendly_pieces(king_colour)
+    friendlies.all? { |friendly|
+      all_valid_moves(friendly.location, friendly.moves).all? { |move|
+        check_own_king?(friendly.location, move, king_colour)
+      }
+    }
   end
 
-  def can_player_avoid_stalemate?(colour)
-    potential_moves = []
-    friendlies = friendly_pieces(colour)
+  def undo_move(start_location, target_location, start_piece, target_piece)
+    @game_board[target_location[0]][target_location[1]] = nil # this line might not be necessary
+    create_piece(start_piece, start_location)
+    create_piece(target_piece, target_location)
+  end
 
-    friendlies.any? do |friendly|
-      valid_moves = all_valid_moves(friendly.location, friendly.moves)
-      valid_moves.any? do |move|
-        !still_in_check_after_move?(friendly, move, friendly.colour)
-      end
+  def create_piece(piece, location)
+    if piece == nil
+      @game_board[location[0]][location[1]] = nil
+    else
+      @game_board[location[0]][location[1]] = piece.class.new(location, piece.colour)
     end
-
   end
+
+
+
 
   #returns true if sq is empty
   def empty_sq?(location)
