@@ -176,16 +176,16 @@ attr_reader :game_board
     puts "\nrook piece: #{rook}; king_start: #{king_start}; king_end: #{king_end}"
     kingside = (king_end[1] == king_start[1] + 2) ? true : false
     rook_target = kingside ? [king_start[0], king_start[1] + 1] : [king_start[0], king_start[1] - 1]
-
-    @game_board[rook.location[0]][rook.location[1]] = nil
-    @game_board[rook_target[0]][rook_target[1]] = Rook.new(rook_target, rook.colour)
+    move_piece(rook.location[0], rook.location[1], rook_target[0], rook_target[1])
   end
 
   def return_castling_rook(start_sq, target_sq)
     kingside = (target_sq[1] == start_sq[1] + 2) ? true : false
     rook_loc = (kingside ? [target_sq[0], target_sq[1] + 1] : [target_sq[0], target_sq[1] - 2] )
+    puts "\n rook_loc: #{rook_loc}"
     return @game_board[rook_loc[0]][rook_loc[1]]
   end
+
 
   def no_pieces_in_between?(from_row, from_column, to_row, to_column)
     if from_row == to_row
