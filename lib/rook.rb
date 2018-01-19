@@ -3,9 +3,10 @@ require_relative "piece.rb"
 class Rook < Piece
   include Moves
   attr_accessor :moves
-  attr_reader :icon
-  def initialize(location, colour)
-    super
+  attr_reader :icon, :already_moved
+  def initialize(location, colour, already_moved = true)
+    super(location, colour)
+    @already_moved = already_moved
     @moves = get_poss_moves
     @colour == "white" ? @icon = "♜" : @icon = "♖"
   end

@@ -107,6 +107,16 @@ describe Board do
       end
     end
 
+#    context "given white player castles kingside" do
+#      it "returns true" do
+#        board.game_board[7][5] = nil
+#        board.game_board[7][6] = nil
+#        board.move_piece(7,4,7,6)
+#        expect(board.game_board[7][6].class).to eql(King)
+#        expect(board.game_board[7][6].colour).to eql("white")
+#      end
+#    end
+
     context "given white pawn moves from [6,7] to [5,7] then [4,7] with black pawn at [4,6]" do
       it "does not set @allow_for_enpassant to true for the white pawn" do
         expect(board.game_board[6][7].allow_for_enpassant).to eql(false)
@@ -325,6 +335,29 @@ describe Board do
       end
     end
 
+#    context "given user (white) castles kingside" do
+#      it "returns true" do
+#        board.game_board[7][5] = nil
+#        board.game_board[7][6] = nil
+#        expect(board.valid_move?(7,4,7,6)).to eql(true)
+#      end
+#    end
+
+    context "practical castling test" do
+      it "returns true" do
+        board.move_piece(7,6,5,5)
+        board.move_piece(1,0,2,0)
+        board.move_piece(6,6,4,6)
+        board.move_piece(2,0,3,0)
+        board.move_piece(7,5,5,7)
+        board.move_piece(3,0,4,0)
+
+        expect(board.valid_move?(7,4,7,6)).to eql(true)
+        board.move_piece(7,4,7,6)
+        board.display_board
+      end
+    end
+
   end
 
   describe "#check?" do
@@ -523,7 +556,6 @@ describe Board do
         board.move_piece(1,4,3,4)
         board.move_piece(6,6,4,6)
         board.move_piece(0,3,4,7)
-        board.display_board
         expect(board.check_mate?("white")).to eql(true)
       end
     end

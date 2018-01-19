@@ -1,26 +1,27 @@
 class Board
+  #x is row, y is column. I know that is a bit confusing. sorry
 attr_reader :game_board
 
   def initialize
     @game_board = Array.new(8) {Array.new(8, " ") }
 
-    @game_board[0][0] = Rook.new([0,0], "black")
+    @game_board[0][0] = Rook.new([0,0], "black", false)
     @game_board[0][1] = Knight.new([0,1], "black")
     @game_board[0][2] = Bishop.new([0,2], "black")
     @game_board[0][3] = Queen.new([0,3], "black")
-    @game_board[0][4] = King.new([0,4], "black")
+    @game_board[0][4] = King.new([0,4], "black", false)
     @game_board[0][5] = Bishop.new([0,5], "black")
     @game_board[0][6] = Knight.new([0,6], "black")
-    @game_board[0][7] = Rook.new([0,7], "black")
+    @game_board[0][7] = Rook.new([0,7], "black", false)
 
-    @game_board[7][0] = Rook.new([7,0], "white")
+    @game_board[7][0] = Rook.new([7,0], "white", false)
     @game_board[7][1] = Knight.new([7,1], "white")
     @game_board[7][2] = Bishop.new([7,2], "white")
     @game_board[7][3] = Queen.new([7,3], "white")
-    @game_board[7][4] = King.new([7,4], "white")
+    @game_board[7][4] = King.new([7,4], "white", false)
     @game_board[7][5] = Bishop.new([7,5], "white")
     @game_board[7][6] = Knight.new([7,6], "white")
-    @game_board[7][7] = Rook.new([7,7], "white")
+    @game_board[7][7] = Rook.new([7,7], "white", false)
 
     0.upto(7) {|y| @game_board[6][y] = Pawn.new([6,y], "white")}
     0.upto(7) {|y| @game_board[1][y] = Pawn.new([1,y], "black")}
@@ -97,6 +98,9 @@ attr_reader :game_board
   #ending coord using the instance variables from the starting one.
   #then make the starting coord == nil
   def move_piece(start_x, start_y, end_x, end_y)
+    if castling_move?(start_x, start_y, end_x, end_y)
+      move_castling_rook([start_x, start_y], [end_x, end_y])
+    end
     piece = @game_board[start_x][start_y]
 
     @game_board[end_x][end_y] = piece.class.new([end_x, end_y], piece.colour)
@@ -123,7 +127,7 @@ attr_reader :game_board
 
     piece = @game_board[start_x][start_y]
     return false if piece == nil
-
+    start_sq = [start_x, start_y]
     target_sq = [end_x, end_y]
     return false unless piece.moves.include?(target_sq)
 
@@ -135,7 +139,52 @@ attr_reader :game_board
       return no_pieces_in_between?(start_x, start_y, end_x, end_y)
     end
 
+    if castling_move?(start_x, start_y, end_x, end_y) then return false if !valid_castling_move?(piece, target_sq) end
+
     true
+  end
+
+  def valid_castling_move?(piece, target_sq)
+    rook = return_castling_rook(piece.location, target_sq)
+    return false if rook.class != Rook || rook.already_moved
+    return false if !no_pieces_in_between?(rook.location[0], rook.location[1], piece.location[0], piece.location[1])
+    return false if piece_under_attack?(piece.location, piece.colour)
+    return false if castling_route_in_check?(rook.location, piece.location, piece.colour)
+    true
+  end
+
+  def castling_route_in_check?(rook_loc, king_loc, king_colour)
+    column = rook_loc[1] < king_loc[1] ? rook_loc[1] : king_loc[1]
+    ending_column = column == rook_loc[1] ? king_loc[1] : rook_loc[1]
+    column += 1
+    until column == ending_column
+      return true if piece_under_attack?([rook_loc[0],column], king_colour)
+      column += 1
+    end
+    false
+  end
+
+  def castling_move?(start_x, start_y, end_x, end_y)
+    starting_piece = @game_board[start_x][start_y]
+    return false if starting_piece.class != King
+    #has to be on the same row, column seperated by two
+    (start_x == end_x) && (end_y - start_y).abs == 2
+  end
+
+  def move_castling_rook(king_start, king_end)
+    rook = return_castling_rook(king_start, king_end)
+    puts "\nrook piece: #{rook}; king_start: #{king_start}; king_end: #{king_end}"
+    kingside = (king_end[1] == king_start[1] + 2) ? true : false
+    rook_target = kingside ? [king_start[0], king_start[1] + 1] : [king_start[0], king_start[1] - 1]
+
+    @game_board[rook.location[0]][rook.location[1]] = nil
+    @game_board[rook_target[0]][rook_target[1]] = Rook.new(rook_target, rook.colour)
+  end
+
+  def return_castling_rook(start_sq, target_sq)
+    kingside = (target_sq[1] == start_sq[1] + 2) ? true : false
+    rook_loc = (kingside ? [target_sq[0], target_sq[1] + 1] : [target_sq[0], target_sq[1] - 2] )
+    return @game_board[rook_loc[0]][rook_loc[1]]
   end
 
   def no_pieces_in_between?(from_row, from_column, to_row, to_column)

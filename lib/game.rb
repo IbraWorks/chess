@@ -45,10 +45,10 @@ class Game
       break if game_over?
       break if is_it_stalemate?
 
-      puts "\n#{@active_player.name}, it's your turn. (#{@active_player.colour}'s turn).\n"
+
       @board.display_board
       check_if_checked?
-
+      puts "\n#{@active_player.name}, it's your turn. (#{@active_player.colour}'s turn).\n"
       #select_which_piece
       player_move = @active_player.get_move
 
