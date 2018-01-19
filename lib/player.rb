@@ -7,7 +7,7 @@ class Player
   end
 
   def get_move
-    puts "\n #{@name}, please enter your move (eg 'a1 to b2')"
+    puts "\n#{@name}, please enter your move (eg 'a1 to b2')"
     player_move = convert_input_to_move(gets.chomp)
     while !player_move
       puts "\nthat doesnt seem right.\nEnter your move in this format ('a1 to b2')"

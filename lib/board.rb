@@ -138,7 +138,7 @@ attr_reader :game_board
     unless piece.class == Knight || piece.class == King
       return no_pieces_in_between?(start_x, start_y, end_x, end_y)
     end
-
+    return false if check_own_king?(start_sq, target_sq, piece.colour) unless castling_move?(start_x, start_y, end_x, end_y)
     if castling_move?(start_x, start_y, end_x, end_y) then return false if !valid_castling_move?(piece, target_sq) end
 
     true
@@ -176,7 +176,7 @@ attr_reader :game_board
     rook = return_castling_rook(king_start, king_end)
     puts "\nrook piece: #{rook}; king_start: #{king_start}; king_end: #{king_end}"
     kingside = (king_end[1] == king_start[1] + 2) ? true : false
-    rook_target = kingside ? [king_start[0], king_start[1] + 1] : [king_start[0], king_start[1] - 1]
+    rook_target = (kingside ? [king_start[0], king_start[1] + 1] : [king_start[0], king_start[1] - 1])
     move_piece(rook.location[0], rook.location[1], rook_target[0], rook_target[1])
   end
 

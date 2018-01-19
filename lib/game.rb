@@ -55,7 +55,7 @@ class Game
       start_sq = player_move[0]
       end_sq = player_move[1]
 
-      if !@board.valid_move?(start_sq[0], start_sq[1], end_sq[0], end_sq[1]) || @board.check_own_king?(start_sq, end_sq, @active_player.colour) || !is_piece_yours?(start_sq, @active_player.colour)
+      if !is_piece_yours?(start_sq, @active_player.colour) || !@board.valid_move?(start_sq[0], start_sq[1], end_sq[0], end_sq[1]) 
         puts "That's not a valid move. please try again \n"
         redo
       end
