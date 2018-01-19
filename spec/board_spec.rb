@@ -165,31 +165,37 @@ describe Board do
 
   describe "#valid_move?" do
     let(:board){Board.new}
+
     context "given an empty starting square" do
       it "returns false" do
         expect(board.valid_move?(4,3,4,4)).to be_falsey
       end
     end
+
     context "given same starting sq and target sq" do
       it "returns false" do
         expect(board.valid_move?(1,1,1,1)).to be_falsey
       end
     end
+
     context "given a starting sq that is off the board" do
       it "returns false" do
         expect(board.valid_move?(10,10,1,1)).to be_falsey
       end
     end
+
     context "given target sq that is off the board" do
       it "returns false" do
         expect(board.valid_move?(1,1,10,10)).to be_falsey
       end
     end
+
     context "given black pawn moves from [1,0] to [2,0]" do
       it "returns true" do
          expect(board.valid_move?(1,0,2,0)).to eql(true)
       end
     end
+
     context "given black pawn moving from [1,0] to [3,0]" do
       it "returns true" do
         expect(board.valid_move?(1,0,3,0)).to eql(true)
@@ -353,6 +359,21 @@ describe Board do
         board.move_piece(3,0,4,0)
 
         expect(board.valid_move?(7,4,7,6)).to eql(true)
+        board.move_piece(7,4,7,6)
+        board.display_board
+      end
+    end
+
+    context "practical castling test, given rook as already moved" do
+      it "returns false" do
+        board.move_piece(7,6,5,5)
+        board.move_piece(1,0,2,0)
+        board.move_piece(6,6,4,6)
+        board.move_piece(2,0,3,0)
+        board.move_piece(7,5,5,7)
+        board.move_piece(3,0,4,0)
+        board.move_piece(7,7,7,6)
+        expect(board.valid_move?(7,4,7,6)).to eql(false)
         board.move_piece(7,4,7,6)
         board.display_board
       end

@@ -153,6 +153,7 @@ attr_reader :game_board
     true
   end
 
+  #checks spaces between rook and king and sees if any of those are under attack by an enemy piece
   def castling_route_in_check?(rook_loc, king_loc, king_colour)
     column = rook_loc[1] < king_loc[1] ? rook_loc[1] : king_loc[1]
     ending_column = column == rook_loc[1] ? king_loc[1] : rook_loc[1]
@@ -163,7 +164,7 @@ attr_reader :game_board
     end
     false
   end
-
+  #returns true if starting piece is a king and moves by two along the same row
   def castling_move?(start_x, start_y, end_x, end_y)
     starting_piece = @game_board[start_x][start_y]
     return false if starting_piece.class != King
@@ -182,9 +183,10 @@ attr_reader :game_board
   def return_castling_rook(start_sq, target_sq)
     kingside = (target_sq[1] == start_sq[1] + 2) ? true : false
     rook_loc = (kingside ? [target_sq[0], target_sq[1] + 1] : [target_sq[0], target_sq[1] - 2] )
-    puts "\n rook_loc: #{rook_loc}"
     return @game_board[rook_loc[0]][rook_loc[1]]
   end
+
+
 
 
   def no_pieces_in_between?(from_row, from_column, to_row, to_column)
