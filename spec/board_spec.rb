@@ -373,9 +373,26 @@ describe Board do
         board.move_piece(7,5,5,7)
         board.move_piece(3,0,4,0)
         board.move_piece(7,7,7,6)
+        board.move_piece(7,6,7,7)
         expect(board.valid_move?(7,4,7,6)).to eql(false)
-        board.move_piece(7,4,7,6)
-        board.display_board
+      #  board.move_piece(7,4,7,6)
+      #  board.display_board
+      end
+    end
+
+
+    context "practical castling test, given rook as already moved" do
+      it "returns false" do
+        board.move_piece(7,6,5,5)
+        board.move_piece(1,0,2,0)
+        board.move_piece(6,6,4,6)
+        board.move_piece(2,0,3,0)
+        board.move_piece(7,5,5,7)
+        board.move_piece(3,0,4,0)
+        board.move_piece(7,7,7,6)
+        expect(board.valid_move?(7,4,7,6)).to eql(false)
+        #board.move_piece(7,4,7,6)
+        #board.display_board
       end
     end
 
