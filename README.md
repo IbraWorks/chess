@@ -1,9 +1,10 @@
-#Chess
+Chess
 ---------------------
+<img src="images/chess.png" width="100">
 This is a two player chess game with the standard rules (including castling, en passant,
 pawn promotion etc). It was built following the TDD mantra.
 
-#Installation
+Installation
 ---------------------
 With Ruby installed, open the command line, navigate to where you want to store
 the file and enter the following:
@@ -14,7 +15,7 @@ ruby lib/play_chess.rb
 
 ```
 
-##Pre thoughts
+Pre thoughts
 ---------------------
 
 I'm really excited about this, but I know it is is going to be hard.
@@ -33,7 +34,7 @@ Things im confident on:
 2) I've read up on object oriented programming more, and I have a quite good idea
   on how I want to structure this (except for inheritance vs composition)
 
-##Post thoughts
+Post thoughts
 ---------------------
 
 This project started well. Having read 'Practical Object-Oriented Design in Ruby'
@@ -101,7 +102,7 @@ could make a valid move each turn, or it can even prioritise a killing move etc
 etc.
 
 
-##Things to improve on
+Things to improve on
 ---------------------
 1) Learn about a technique fully before utilising it.
 2) Trust the TDD process.
