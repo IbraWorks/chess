@@ -1,17 +1,17 @@
 Chess
 ---------------------
-<img src="images/chess.png" width="100">
+<img src="images/chess.png" width="400">
 This is a two player chess game with the standard rules (including castling, en passant,
 pawn promotion etc). It was built following the TDD mantra.
 
 Installation
 ---------------------
 With Ruby installed, open the command line, navigate to where you want to store
-the file and enter the following:
+the file and enter the following in your terminal/command-line:
 ```
-git clone https://github.com/IvyMic/chess.git
-cd chess
-ruby lib/play_chess.rb
+$git clone https://github.com/IvyMic/chess.git
+$cd chess
+$ruby lib/play_chess.rb
 
 ```
 
